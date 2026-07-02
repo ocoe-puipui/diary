@@ -6,29 +6,45 @@
     <title>Chronicle - 多機能絵日記帳</title>
     <style>
         :root {
-            --bg-color: #f7f5f0;          /* 落ち着いた生成り（アイボリー） */
-            --panel-bg: #ffffff;          /* 上質な白リネンをイメージ */
-            --text-main: #2c3e50;         /* 深みのあるチャコール */
-            --text-muted: #7f8c8d;        /* 静かなグレー */
-            --border-color: #e0dbd1;      /* 繊細な細い境界線 */
-            --accent-color: #af926b;      /* 洗練された真鍮ゴールド */
-            --accent-hover: #8e7350;      /* 深いゴールド */
+            --panel-bg: #ffffff;          /* 基本のパネル背景 */
+            --text-main: #1a252f;         /* より濃くハッキリしたチャコール */
+            --text-muted: #555555;        /* 薄すぎない、しっかり読めるグレー */
+            --border-color: #b0a99f;      /* 枠線を太く・濃くして境界を明瞭に */
             --danger-color: #c0392b;      /* 落ち着いたワインレッド */
+
+            /* 初期値（Classic Gold） */
+            --bg-color: #fcfbf9;
+            --accent-color: #a0522d;
+            --accent-hover: #8b4513;
         }
+
+        /* --- メリハリがあり区別しやすい10種類のエレガントなテーマ定義 --- */
+        body.theme-classic { --bg-color: #fcfbf9; --accent-color: #a0522d; --accent-hover: #8b4513; } /* シエナブラウン */
+        body.theme-green   { --bg-color: #f2f7f4; --accent-color: #1e5631; --accent-hover: #143d22; } /* フォレストグリーン */
+        body.theme-blue    { --bg-color: #f0f5fa; --accent-color: #1a4a75; --accent-hover: #103250; } /* ディープブルー */
+        body.theme-red     { --bg-color: #faf2f2; --accent-color: #8b0000; --accent-hover: #5a0000; } /* ダークレッド */
+        body.theme-pink    { --bg-color: #fdf5f7; --accent-color: #b33951; --accent-hover: #8c2639; } /* ローズマゼンタ */
+        body.theme-purple  { --bg-color: #f6f3f8; --accent-color: #5d317c; --accent-hover: #43205b; } /* ロイヤルパープル */
+        body.theme-amber   { --bg-color: #fcf7f2; --accent-color: #c25c0e; --accent-hover: #964303; } /* ディープアンバー */
+        body.theme-teal    { --bg-color: #f0f7f7; --accent-color: #006666; --accent-hover: #004d4d; } /* ディープティール */
+        body.theme-gray    { --bg-color: #f5f6f6; --accent-color: #4a5568; --accent-hover: #2d3748; } /* スレートグレー */
+        body.theme-dark    { --bg-color: #eef0f1; --accent-color: #2c3e50; --accent-hover: #1a252f; } /* ミッドナイトブラック */
 
         body {
             background-color: var(--bg-color);
-            font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", "Hiragino Mincho ProN", "Yu Mincho", serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", "Hiragino Kaku Gothic ProN", "BIZ UDPGothic", "Meiryo", sans-serif;
             color: var(--text-main);
+            font-weight: 500;
             margin: 0;
             padding: 20px 10px 40px 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
             letter-spacing: 0.05em;
+            transition: background-color 0.4s ease;
         }
 
-        /* --- ノート切り替えタブのスタイル --- */
+        /* ノート切り替えタブ */
         .notebook-tabs-container {
             width: 100%;
             max-width: 1200px;
@@ -36,64 +52,104 @@
             box-sizing: border-box;
         }
         .notebook-tabs {
-            display: flex;
-            flex-wrap: wrap;
-            border: 1px solid var(--border-color);
-            background-color: var(--panel-bg);
-            border-radius: 4px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 2px;
+            background-color: var(--border-color);
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
             overflow: hidden;
         }
         .notebook-tab {
-            flex: 1;
-            min-width: 150px;
-            padding: 15px 20px;
+            padding: 15px 15px;
             font-size: 0.95rem;
+            font-weight: 600;
             color: var(--text-muted);
-            background-color: transparent;
+            background-color: var(--panel-bg);
             border: none;
-            border-right: 1px solid var(--border-color);
-            border-radius: 0;
             cursor: pointer;
-            text-align: left;
             display: flex;
             justify-content: space-between;
             align-items: center;
             transition: all 0.2s;
-            text-transform: none; /* 大文字強制を解除 */
+            box-sizing: border-box;
+            min-width: 0;
         }
         .notebook-tab:hover {
-            background-color: #faf9f6;
+            background-color: #f5f3ef;
             color: var(--text-main);
         }
         .notebook-tab.active {
             background-color: #fff;
             color: var(--text-main);
-            font-weight: bold;
-            box-shadow: inset 0 -3px 0 var(--accent-color);
+            font-weight: 800;
+            box-shadow: inset 0 -4px 0 var(--accent-color);
         }
         .notebook-tab-add {
-            background-color: #faf9f6;
-            color: var(--text-muted);
+            background-color: #f5f3ef;
+            color: var(--text-main);
             justify-content: center;
-            font-weight: normal;
-            max-width: 200px;
         }
         .notebook-tab-add:hover {
-            background-color: #f1eee7;
-            color: var(--text-main);
+            background-color: #e5e2db;
+        }
+        .notebook-tab-text {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex-grow: 1;
+            margin-right: 5px;
         }
         .notebook-tab-rename-btn {
-            font-size: 0.75rem;
+            font-size: 0.85rem;
             color: var(--accent-color);
             background: none;
             border: none;
-            padding: 2px 6px;
+            padding: 2px 4px;
             width: auto;
             cursor: pointer;
-            opacity: 0.5;
+            flex-shrink: 0;
         }
-        .notebook-tab:hover .notebook-tab-rename-btn {
-            opacity: 1;
+
+        /* 現在の日記帳名とテーマ設定エリア */
+        .notebook-header-panel {
+            width: 100%;
+            max-width: 1200px;
+            background-color: var(--panel-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            padding: 15px 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            box-sizing: border-box;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .current-notebook-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .theme-selector-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+        .theme-selector-wrapper select {
+            width: auto;
+            padding: 8px 12px;
+            font-weight: 600;
+            border: 2px solid var(--border-color);
         }
 
         /* 全体コンテナ */
@@ -107,7 +163,7 @@
 
         @media (min-width: 992px) {
             .container {
-                grid-template-columns: 240px 1fr 280px;
+                grid-template-columns: 290px 1fr 290px;
                 align-items: start;
             }
             .sidebar-left, .sidebar-right {
@@ -118,28 +174,32 @@
 
         .notebook-panel {
             background-color: var(--panel-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
             padding: 25px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
             box-sizing: border-box;
+        }
+
+        .notebook-panel.history-panel {
+            margin-top: 20px; /* カレンダーの下に配置するための余白 */
         }
 
         h2, h3 {
             margin-top: 0;
             color: var(--text-main);
-            font-weight: 400;
-            font-size: 1.15rem;
+            font-weight: 700;
+            font-size: 1.25rem;
             letter-spacing: 0.1em;
-            border-bottom: 1px solid var(--accent-color);
+            border-bottom: 3px solid var(--accent-color);
             padding-bottom: 8px;
             margin-bottom: 20px;
             text-transform: uppercase;
         }
 
         .editable-label {
-            font-size: 0.85rem;
-            font-weight: 600;
+            font-size: 0.95rem;
+            font-weight: 700;
             color: var(--accent-color);
             display: inline-block;
             margin-bottom: 8px;
@@ -147,108 +207,151 @@
             letter-spacing: 0.1em;
         }
 
-        .form-group {
-            margin-bottom: 25px;
-        }
+        .form-group { margin-bottom: 25px; }
 
-        input[type="date"], select, textarea {
+        input[type="text"], input[type="date"], select, textarea {
             width: 100%;
             padding: 12px;
-            border: 1px solid var(--border-color);
-            border-radius: 2px;
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
             background-color: #faf9f6;
             box-sizing: border-box;
-            font-size: 0.95rem;
+            font-size: 1rem;
+            font-weight: 600;
             color: var(--text-main);
             font-family: inherit;
             transition: all 0.3s;
         }
-        input[type="date"]:focus, select:focus, textarea:focus {
+        input[type="text"]:focus, input[type="date"]:focus, select:focus, textarea:focus {
             outline: none;
             border-color: var(--accent-color);
             background-color: #fff;
         }
 
-        textarea {
-            height: 180px;
-            resize: vertical;
-            line-height: 1.8;
-        }
+        textarea { height: 180px; resize: vertical; line-height: 1.8; font-weight: 500; }
 
         .image-preview-area {
-            border: 1px dashed var(--accent-color);
+            border: 2px dashed var(--accent-color);
             padding: 20px;
             text-align: center;
             background-color: #faf9f6;
             cursor: pointer;
+            font-weight: 600;
         }
         .image-preview-area img {
             max-width: 100%;
             max-height: 250px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
 
         button {
             background-color: var(--accent-color);
             color: white;
             border: none;
-            border-radius: 2px;
+            border-radius: 4px;
             padding: 12px 20px;
-            font-size: 0.85rem;
+            font-size: 0.95rem;
+            font-weight: 700;
             letter-spacing: 0.1em;
             cursor: pointer;
             width: 100%;
             transition: background-color 0.2s;
             text-transform: uppercase;
         }
-        button:hover {
-            background-color: var(--accent-hover);
-        }
+        button:hover { background-color: var(--accent-hover); }
 
         .backup-btn {
             background-color: transparent;
-            color: var(--text-muted);
-            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            border: 2px solid var(--border-color);
             margin-bottom: 12px;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
+            font-weight: 600;
         }
-        .backup-btn:hover { background-color: #faf9f6; color: var(--text-main); }
+        .backup-btn:hover { background-color: #faf9f6; }
         
-        .new-post-btn { background-color: var(--text-main); margin-bottom: 25px; }
-        .new-post-btn:hover { background-color: #1a252f; }
+        .new-post-btn { background-color: var(--text-main); margin-bottom: 25px; font-size: 1rem;}
+        .new-post-btn:hover { background-color: #000000; }
         
         .file-input-label {
             display: block;
             background-color: transparent;
-            color: var(--text-muted);
-            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
             padding: 10px 15px;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
+            font-weight: 600;
             text-align: center;
             cursor: pointer;
         }
-        .file-input-label:hover { background-color: #faf9f6; color: var(--text-main); }
+        .file-input-label:hover { background-color: #faf9f6; }
 
-        .index-list {
+        /* 目次リスト（2行表示用） */
+        .index-list, .history-list {
             list-style: none;
             padding: 0;
             margin: 0;
-            max-height: 250px;
-            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
-        .index-item {
-            padding: 10px 8px;
-            border-bottom: 1px solid #f1eee7;
+        .index-list { max-height: 450px; overflow-y: auto; }
+
+        .index-item, .history-item {
+            padding: 12px 14px;
+            background-color: #faf9f6;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 0.8rem;
-            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+        }
+        .index-item:hover, .index-item.active, .history-item:hover {
+            background-color: #ffffff;
+            border-color: var(--accent-color);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transform: translateY(-1px);
+        }
+        .index-item.active {
+            border-left: 6px solid var(--accent-color);
+        }
+        .index-row-top, .history-row-top {
             display: flex;
             justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-muted);
         }
-        .index-item:hover, .index-item.active {
+        .index-page-num, .history-notebook-name {
+            color: var(--accent-color);
+        }
+        .index-row-bottom, .history-row-bottom {
+            font-size: 0.95rem;
+            font-weight: 600;
             color: var(--text-main);
-            border-bottom-color: var(--accent-color);
-            padding-left: 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding-top: 2px;
+        }
+        .index-row-bottom.empty-title, .history-row-bottom.empty-title {
+            color: #b0a99f;
+            font-size: 0.85rem;
+            font-style: italic;
+        }
+
+        /* 閲覧時の日記タイトルスタイル */
+        .diary-view-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin: -5px 0 15px 0;
+            padding-bottom: 2px;
         }
 
         .diary-view-header {
@@ -256,9 +359,10 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 25px;
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            border-bottom: 1px solid var(--border-color);
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-main);
+            border-bottom: 2px solid var(--border-color);
             padding-bottom: 15px;
         }
         .diary-view-image {
@@ -266,15 +370,16 @@
             margin-bottom: 30px;
             background-color: #faf9f6;
             padding: 15px;
-            border: 1px solid var(--border-color);
+            border: 2px solid var(--border-color);
         }
         .diary-view-image img {
             max-width: 100%;
             max-height: 350px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
         }
         .diary-view-text {
-            font-size: 1rem;
+            font-size: 1.05rem;
+            font-weight: 500;
             line-height: 2;
             white-space: pre-wrap;
             color: var(--text-main);
@@ -286,12 +391,12 @@
             justify-content: flex-end;
             gap: 15px;
             margin-top: 40px;
-            border-top: 1px solid var(--border-color);
+            border-top: 2px solid var(--border-color);
             padding-top: 20px;
         }
-        .delete-btn { background-color: transparent; color: var(--text-muted); border: 1px solid var(--border-color); padding: 8px 16px; font-size: 0.8rem; width: auto; }
-        .delete-btn:hover { background-color: #fff1f0; color: var(--danger-color); border-color: #ffa39e; }
-        .edit-entry-btn { background-color: transparent; color: var(--accent-color); border: 1px solid var(--accent-color); padding: 8px 16px; font-size: 0.8rem; width: auto; }
+        .delete-btn { background-color: transparent; color: var(--text-muted); border: 2px solid var(--border-color); padding: 8px 16px; font-size: 0.85rem; font-weight: 600; width: auto; }
+        .delete-btn:hover { background-color: #fff1f0; color: var(--danger-color); border-color: var(--danger-color); }
+        .edit-entry-btn { background-color: transparent; color: var(--accent-color); border: 2px solid var(--accent-color); padding: 8px 16px; font-size: 0.85rem; font-weight: 700; width: auto; }
         .edit-entry-btn:hover { background-color: var(--accent-color); color: white; }
 
         /* カレンダー */
@@ -301,51 +406,49 @@
             align-items: center;
             margin-bottom: 15px;
         }
-        .calendar-title {
-            font-size: 0.95rem;
-            font-weight: 600;
-            letter-spacing: 0.05em;
-        }
+        .calendar-title { font-size: 1.05rem; font-weight: 700; letter-spacing: 0.05em; }
         .calendar-nav-btn {
             background: none;
             color: var(--text-main);
-            border: 1px solid var(--border-color);
-            padding: 4px 10px;
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            padding: 4px 12px;
             width: auto;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
+            font-weight: 700;
         }
         .calendar-nav-btn:hover { background-color: #faf9f6; }
         
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 4px;
-            text-align: center;
-        }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
         .calendar-day-label {
-            font-size: 0.7rem;
-            font-weight: 600;
-            color: var(--text-muted);
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-main);
             padding-bottom: 8px;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 2px solid var(--border-color);
             margin-bottom: 4px;
         }
         .calendar-cell {
-            font-size: 0.8rem;
+            font-size: 0.85rem;
+            font-weight: 600;
             padding: 8px 0;
-            color: #ccc;
+            color: #b0b0b0;
         }
         .calendar-cell.current-month {
             color: var(--text-main);
+            cursor: pointer;
+            border: 2px solid transparent;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        .calendar-cell.current-month:hover {
+            background-color: #eae6db;
         }
         .calendar-cell.has-diary {
-            background-color: #faf5ed;
+            background-color: #ffffff;
             color: var(--accent-color);
-            font-weight: bold;
-            border: 1px solid var(--accent-color);
-            border-radius: 2px;
-            cursor: pointer;
-            transition: all 0.2s;
+            font-weight: 800;
+            border: 2px solid var(--accent-color);
         }
         .calendar-cell.has-diary:hover {
             background-color: var(--accent-color);
@@ -358,12 +461,30 @@
         }
     </style>
 </head>
-<body>
+<body class="theme-classic" id="appBody">
 
 <!-- 最上部：日記切り替えメニュー（タブ型） -->
 <div class="notebook-tabs-container">
-    <div class="notebook-tabs" id="notebookTabs">
-        <!-- タブがここに動的に生成されます -->
+    <div class="notebook-tabs" id="notebookTabs"></div>
+</div>
+
+<!-- 選択中の日記帳名とテーマ一括変更用パネル -->
+<div class="notebook-header-panel">
+    <h1 class="current-notebook-title" id="currentNotebookTitle">📖 DIARY</h1>
+    <div class="theme-selector-wrapper">
+        <span>COLOR THEME</span>
+        <select id="notebookGlobalTheme" onchange="changeNotebookTheme(this.value)">
+            <option value="theme-classic">1. Sienna Brown</option>
+            <option value="theme-green">2. Forest Green</option>
+            <option value="theme-blue">3. Deep Blue</option>
+            <option value="theme-red">4. Dark Red</option>
+            <option value="theme-pink">5. Rose Magenta</option>
+            <option value="theme-purple">6. Royal Purple</option>
+            <option value="theme-amber">7. Deep Amber</option>
+            <option value="theme-teal">8. Deep Teal</option>
+            <option value="theme-gray">9. Slate Gray</option>
+            <option value="theme-dark">10. Midnight Black</option>
+        </select>
     </div>
 </div>
 
@@ -372,12 +493,8 @@
     <div class="sidebar-left">
         <div class="notebook-panel">
             <button class="new-post-btn" onclick="showNewForm()">Write a Diary</button>
-
             <h3>Index</h3>
-            <ul class="index-list" id="indexList" style="margin-bottom: 30px;">
-                <!-- 目次 -->
-            </ul>
-
+            <ul class="index-list" id="indexList" style="margin-bottom: 30px;"></ul>
             <h3>Management</h3>
             <div>
                 <button class="backup-btn" onclick="exportData()">Export (Backup)</button>
@@ -390,73 +507,188 @@
     </div>
 
     <!-- 中央：メインコンテンツ -->
-    <div class="notebook-panel" id="mainPanel">
-        <!-- コンテンツエリア -->
-    </div>
+    <div class="notebook-panel" id="mainPanel"></div>
 
-    <!-- 右側：サイドバー（常時カレンダー） -->
+    <!-- 右側：サイドバー（カレンダー ＋ 横断的な編集履歴） -->
     <div class="sidebar-right">
+        <!-- カレンダー -->
         <div class="notebook-panel">
             <h3>Calendar</h3>
             <div class="calendar-header">
                 <button class="calendar-nav-btn" onclick="moveCalendar(-1)">◀</button>
-                <div class="calendar-title" id="calendarTitle">2026.06</div>
+                <div class="calendar-title" id="calendarTitle">2026.07</div>
                 <button class="calendar-nav-btn" onclick="moveCalendar(1)">▶</button>
             </div>
-            <div class="calendar-grid" id="calendarGrid">
-                <!-- カレンダー本体 -->
-            </div>
+            <div class="calendar-grid" id="calendarGrid"></div>
+        </div>
+
+        <!-- 追加：横断的な最近の編集履歴 -->
+        <div class="notebook-panel history-panel">
+            <h3>Recent Activity</h3>
+            <ul class="history-list" id="historyList"></ul>
         </div>
     </div>
 </div>
 
 <script>
-    // 複数ノート管理用のデータ構造
-    // データの初期化 (データがない場合は初期の日記1を作成)
     let notebooks = JSON.parse(localStorage.getItem('chronicle_notebooks')) || [
-        { id: 'nb_default', name: '日記1', entries: [] }
+        { id: 'nb_default', name: '日記1', theme: 'theme-classic', entries: [] }
     ];
     let currentNotebookId = localStorage.getItem('chronicle_current_nb_id') || 'nb_default';
 
-    // 固定英語ラベル
-    const labels = { 'lbl-date': 'Date', 'lbl-weather': 'Weather', 'lbl-image': 'Photograph', 'lbl-content': 'Chronicle' };
+    // 横断編集履歴を保持するためのグローバル配列（最大5件）
+    let editHistory = JSON.parse(localStorage.getItem('chronicle_edit_history')) || [];
+
+    const labels = {
+        'lbl-date': 'Date',
+        'lbl-title': 'Title (Optional)',
+        'lbl-weather': 'Weather',
+        'lbl-image': 'Photograph',
+        'lbl-content': 'Chronicle'
+    };
     
     let currentSelectId = null;
+    let currentFormDate = null;
     let tempImageData = "";
 
     let calendarYear = new Date().getFullYear();
     let calendarMonth = new Date().getMonth();
 
     window.onload = function() {
-        // 万が一現在のノートIDが存在しない場合、安全な値にフォールバック
         if (!notebooks.find(nb => nb.id === currentNotebookId)) {
             currentNotebookId = notebooks[0].id;
         }
+        notebooks.forEach(nb => { if (!nb.theme) nb.theme = 'theme-classic'; });
+
         renderTabs();
+        updateNotebookHeader();
         refreshSidebar();
+        renderHistory(); // 履歴の描画
         
         const currentEntries = getCurrentEntries();
         if (currentEntries.length > 0) {
             viewDiary(currentEntries[0].id);
         } else {
             showNewForm();
-            renderCalendar();
         }
     };
 
-    // 現在選択されているノートの全日記データを取得するヘルパー
+    function getCurrentNotebook() {
+        return notebooks.find(n => n.id === currentNotebookId);
+    }
+
     function getCurrentEntries() {
-        const nb = notebooks.find(n => n.id === currentNotebookId);
+        const nb = getCurrentNotebook();
         return nb ? nb.entries : [];
     }
 
-    // データをローカルストレージに一元保存する関数
     function saveAllData() {
         localStorage.setItem('chronicle_notebooks', JSON.stringify(notebooks));
         localStorage.setItem('chronicle_current_nb_id', currentNotebookId);
+        localStorage.setItem('chronicle_edit_history', JSON.stringify(editHistory));
     }
 
-    // --- タブメニューの描画機能 ---
+    // 横断編集履歴に新しいログを追加・保存する関数
+    function pushToHistory(notebookId, notebookName, entryId, entryDate, entryTitle) {
+        // 同じ日記ページの既存ログがあれば重複排除
+        editHistory = editHistory.filter(h => !(h.notebookId === notebookId && h.entryId === entryId));
+        
+        // 先頭に追加
+        editHistory.unshift({
+            notebookId: notebookId,
+            notebookName: notebookName,
+            entryId: entryId,
+            entryDate: entryDate,
+            entryTitle: entryTitle,
+            timestamp: new Date().getTime()
+        });
+
+        // 最大5件に絞る
+        if (editHistory.length > 5) {
+            editHistory = editHistory.slice(0, 5);
+        }
+        
+        saveAllData();
+        renderHistory();
+    }
+
+    // 履歴セクションを描画する関数
+    function renderHistory() {
+        const historyList = document.getElementById('historyList');
+        historyList.innerHTML = '';
+
+        if (editHistory.length === 0) {
+            historyList.innerHTML = '<li style="color:var(--text-muted);font-size:0.85rem;font-weight:600;padding:10px 0;text-align:center;">No recent activity.</li>';
+            return;
+        }
+
+        editHistory.forEach(h => {
+            // 現在の全データから対象ノートおよび日記が実在するか確認（削除対策）
+            const nbExist = notebooks.find(n => n.id === h.notebookId);
+            if (!nbExist) return;
+            const entryExist = nbExist.entries.find(e => e.id === h.entryId);
+            if (!entryExist) return;
+
+            const li = document.createElement('li');
+            li.className = 'history-item';
+            
+            const slashDate = formatSlashDate(h.entryDate);
+            const topRow = `<div class="history-row-top"><span class="history-notebook-name">📔 ${h.notebookName}</span><span>${slashDate}</span></div>`;
+            
+            let bottomRow = '';
+            if (h.entryTitle) {
+                bottomRow = `<div class="history-row-bottom">${h.entryTitle}</div>`;
+            } else {
+                bottomRow = `<div class="history-row-bottom empty-title">(タイトルなし)</div>`;
+            }
+
+            li.innerHTML = topRow + bottomRow;
+            // クリック時、ノートを跨いで対象の日記を表示するリンク機能
+            li.onclick = () => jumpToDiary(h.notebookId, h.entryId);
+            historyList.appendChild(li);
+        });
+    }
+
+    // 履歴から別の日記帳（ノート）の特定のページへジャンプする処理
+    function jumpToDiary(notebookId, entryId) {
+        currentNotebookId = notebookId;
+        currentSelectId = entryId;
+        currentFormDate = null;
+        
+        saveAllData();
+        renderTabs();
+        updateNotebookHeader();
+        refreshSidebar();
+        viewDiary(entryId);
+    }
+
+    function applyTheme(themeName) {
+        const body = document.getElementById('appBody');
+        body.className = '';
+        body.classList.add(themeName || 'theme-classic');
+    }
+
+    function updateNotebookHeader() {
+        const nb = getCurrentNotebook();
+        if (nb) {
+            document.getElementById('currentNotebookTitle').innerText = `📖 ${nb.name}`;
+            document.getElementById('notebookGlobalTheme').value = nb.theme || 'theme-classic';
+            applyTheme(nb.theme);
+        }
+    }
+
+    function changeNotebookTheme(themeName) {
+        const nb = getCurrentNotebook();
+        if (nb) {
+            nb.theme = themeName;
+            saveAllData();
+            applyTheme(themeName);
+            renderTabs();
+            refreshSidebar();
+            renderCalendar();
+        }
+    }
+
     function renderTabs() {
         const container = document.getElementById('notebookTabs');
         container.innerHTML = '';
@@ -465,20 +697,18 @@
             const btn = document.createElement('button');
             btn.className = `notebook-tab ${nb.id === currentNotebookId ? 'active' : ''}`;
             
-            // タブのテキスト部分
             const textSpan = document.createElement('span');
+            textSpan.className = 'notebook-tab-text';
             textSpan.innerText = nb.name;
-            textSpan.style.cursor = 'pointer';
+            textSpan.title = nb.name;
             textSpan.onclick = () => switchNotebook(nb.id);
             btn.appendChild(textSpan);
 
-            // 編集用ボタン (⚙️アイコン)
             const renameBtn = document.createElement('span');
             renameBtn.className = 'notebook-tab-rename-btn';
-            renameBtn.innerHTML = '⚙️';
-            renameBtn.title = '名前の変更 / 削除';
+            renameBtn.innerHTML = '📔';
             renameBtn.onclick = (e) => {
-                e.stopPropagation(); // 切り替えイベントを防ぐ
+                e.stopPropagation();
                 manageNotebookPrompt(nb.id);
             };
             btn.appendChild(renameBtn);
@@ -486,7 +716,6 @@
             container.appendChild(btn);
         });
 
-        // 「日記を追加」タブを追加
         const addBtn = document.createElement('button');
         addBtn.className = 'notebook-tab notebook-tab-add';
         addBtn.innerText = '＋ 日記を追加';
@@ -494,12 +723,13 @@
         container.appendChild(addBtn);
     }
 
-    // ノートの切り替え
     function switchNotebook(id) {
         currentNotebookId = id;
         currentSelectId = null;
+        currentFormDate = null;
         saveAllData();
         renderTabs();
+        updateNotebookHeader();
         refreshSidebar();
         
         const currentEntries = getCurrentEntries();
@@ -507,28 +737,20 @@
             viewDiary(currentEntries[0].id);
         } else {
             showNewForm();
-            renderCalendar();
         }
     }
 
-    // 新しい日記（ノート）を追加
     function addNotebook() {
         const name = prompt("新しい日記（ノート）の名前を入力してください:", `日記${notebooks.length + 1}`);
         if (!name || name.trim() === "") return;
 
         const newId = 'nb_' + Date.now();
-        notebooks.push({
-            id: newId,
-            name: name.trim(),
-            entries: []
-        });
-        
+        notebooks.push({ id: newId, name: name.trim(), theme: 'theme-classic', entries: [] });
         currentNotebookId = newId;
         saveAllData();
         switchNotebook(newId);
     }
 
-    // ノート名の編集・削除メニュー
     function manageNotebookPrompt(id) {
         const nb = notebooks.find(n => n.id === id);
         if (!nb) return;
@@ -541,24 +763,38 @@
                 nb.name = newName.trim();
                 saveAllData();
                 renderTabs();
+                updateNotebookHeader();
+                renderHistory(); // 履歴側の表記も更新するため再描画
             }
         } else if (action === "2") {
             if (notebooks.length <= 1) {
-                alert("これ以上日記帳を削除することはできません。最低1つの日記帳が必要です。");
+                alert("これ以上日記帳を削除することはできません。");
                 return;
             }
-            if (confirm(`本当に「${nb.name}」を中の日記データも含めてすべて削除しますか？\nこの操作は取り消せません。`)) {
+            if (confirm(`本当に「${nb.name}」を中の日記データも含めてすべて削除しますか？`)) {
                 notebooks = notebooks.filter(n => n.id !== id);
-                if (currentNotebookId === id) {
-                    currentNotebookId = notebooks[0].id;
-                }
+                if (currentNotebookId === id) currentNotebookId = notebooks[0].id;
+                // 履歴からも削除されたノートのデータを消す
+                editHistory = editHistory.filter(h => h.notebookId !== id);
                 saveAllData();
                 switchNotebook(currentNotebookId);
             }
         }
     }
 
-    // --- 日記帳の標準機能のアップデート（選択中ノートへの連動） ---
+    function formatJapaneseDate(dateStr) {
+        if (!dateStr) return "";
+        const parts = dateStr.split('-');
+        if (parts.length === 3) {
+            return `${parts[0]}/${parts[1]}/${parts[2]}/`;
+        }
+        return dateStr;
+    }
+
+    function formatSlashDate(dateStr) {
+        if (!dateStr) return "";
+        return dateStr.replace(/-/g, '/');
+    }
 
     function refreshSidebar() {
         const indexList = document.getElementById('indexList');
@@ -566,7 +802,7 @@
         const currentEntries = getCurrentEntries();
 
         if (currentEntries.length === 0) {
-            indexList.innerHTML = '<li style="color:var(--text-muted);font-size:0.8rem;padding:10px 0;">No entries yet.</li>';
+            indexList.innerHTML = '<li style="color:var(--text-muted);font-size:0.9rem;font-weight:600;padding:10px 0;text-align:center;">No entries yet.</li>';
             return;
         }
 
@@ -574,7 +810,18 @@
             const pageNum = currentEntries.length - idx;
             const li = document.createElement('li');
             li.className = `index-item ${entry.id === currentSelectId ? 'active' : ''}`;
-            li.innerHTML = `<span>Page.${pageNum}</span> <span>${entry.date}</span>`;
+            
+            const slashDate = formatSlashDate(entry.date);
+            const topRow = `<div class="index-row-top"><span class="index-page-num">P.${pageNum}</span><span>${slashDate}</span></div>`;
+            
+            let bottomRow = '';
+            if (entry.title) {
+                bottomRow = `<div class="index-row-bottom" title="${entry.title}">${entry.title}</div>`;
+            } else {
+                bottomRow = `<div class="index-row-bottom empty-title">(タイトルなし)</div>`;
+            }
+
+            li.innerHTML = topRow + bottomRow;
             li.onclick = () => viewDiary(entry.id);
             indexList.appendChild(li);
         });
@@ -606,7 +853,7 @@
             grid.appendChild(cell);
         }
 
-        let activeDateString = "";
+        let activeDateString = currentFormDate || "";
         const currentEntries = getCurrentEntries();
         if (currentSelectId) {
             const activeEntry = currentEntries.find(e => e.id === currentSelectId);
@@ -623,11 +870,14 @@
             const foundEntry = currentEntries.find(e => e.date === dateStr);
             if (foundEntry) {
                 cell.classList.add('has-diary');
-                cell.onclick = () => viewDiary(foundEntry.id);
-                if (dateStr === activeDateString) {
-                    cell.classList.add('is-active');
-                }
             }
+            
+            cell.onclick = () => onCalendarCellClick(dateStr, foundEntry);
+
+            if (dateStr === activeDateString) {
+                cell.classList.add('is-active');
+            }
+
             grid.appendChild(cell);
         }
 
@@ -641,6 +891,14 @@
         }
     }
 
+    function onCalendarCellClick(dateStr, foundEntry) {
+        if (foundEntry) {
+            viewDiary(foundEntry.id);
+        } else {
+            showNewForm(dateStr);
+        }
+    }
+
     function moveCalendar(direction) {
         calendarMonth += direction;
         if (calendarMonth > 11) { calendarMonth = 0; calendarYear++; }
@@ -650,12 +908,13 @@
 
     function viewDiary(id) {
         currentSelectId = id;
-        refreshSidebar();
-
+        currentFormDate = null;
         const currentEntries = getCurrentEntries();
         const entry = currentEntries.find(e => e.id === id);
         const mainPanel = document.getElementById('mainPanel');
         if (!entry) return;
+
+        refreshSidebar();
 
         const entryDate = new Date(entry.date);
         if (!isNaN(entryDate)) {
@@ -667,15 +926,17 @@
         const idx = currentEntries.indexOf(entry);
         const pageNum = currentEntries.length - idx;
         const imgHtml = entry.image ? `<div class="diary-view-image"><img src="${entry.image}"></div>` : '';
+        const titleHtml = entry.title ? `<div class="diary-view-title">📌 ${entry.title}</div>` : '';
 
         mainPanel.innerHTML = `
             <h2>Page.${pageNum}</h2>
+            ${titleHtml}
             <div class="diary-view-header">
-                <div>📅 <strong>${labels['lbl-date']}:</strong> ${entry.date}</div>
+                <div>📅 <strong>${labels['lbl-date']}:</strong> ${formatJapaneseDate(entry.date)}</div>
                 <div><strong>${labels['lbl-weather']}:</strong> ${entry.weather}</div>
             </div>
             ${imgHtml}
-            <div style="font-size:0.75rem; color:var(--accent-color); margin-bottom:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.1em;">${labels['lbl-content']}</div>
+            <div style="font-size:0.85rem; color:var(--accent-color); margin-bottom:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em;">${labels['lbl-content']}</div>
             <div class="diary-view-text">${entry.content}</div>
             
             <div class="action-buttons">
@@ -685,11 +946,15 @@
         `;
     }
 
-    function showNewForm() {
+    function showNewForm(targetDateStr = null) {
         currentSelectId = null;
-        refreshSidebar();
         tempImageData = "";
-        renderCalendar();
+
+        const finalDateStr = targetDateStr || new Date().toISOString().substring(0, 10);
+        currentFormDate = finalDateStr;
+
+        refreshSidebar();
+        syncCalendarMonth(finalDateStr);
 
         const mainPanel = document.getElementById('mainPanel');
         mainPanel.innerHTML = `
@@ -697,7 +962,11 @@
             <form id="diaryForm" onsubmit="saveNewDiary(event)">
                 <div class="form-group">
                     <span class="editable-label">${labels['lbl-date']}</span>
-                    <input type="date" id="diaryDate" required onchange="syncCalendarMonth(this.value)">
+                    <input type="date" id="diaryDate" value="${finalDateStr}" required onchange="onFormDateChange(this.value)">
+                </div>
+                <div class="form-group">
+                    <span class="editable-label">${labels['lbl-title']}</span>
+                    <input type="text" id="diaryTitle" placeholder="例: 外出、仕事、旅行など（省略可）">
                 </div>
                 <div class="form-group">
                     <span class="editable-label">${labels['lbl-weather']}</span>
@@ -723,9 +992,11 @@
                 <button type="submit">Save to Chronicle</button>
             </form>
         `;
-        const todayStr = new Date().toISOString().substring(0, 10);
-        document.getElementById('diaryDate').value = todayStr;
-        syncCalendarMonth(todayStr);
+    }
+
+    function onFormDateChange(val) {
+        currentFormDate = val;
+        syncCalendarMonth(val);
     }
 
     function syncCalendarMonth(dateValue) {
@@ -743,6 +1014,7 @@
         if (!entry) return;
 
         tempImageData = entry.image;
+        currentFormDate = entry.date;
         const mainPanel = document.getElementById('mainPanel');
         
         mainPanel.innerHTML = `
@@ -750,7 +1022,11 @@
             <form id="diaryForm" onsubmit="saveEditDiary(event, ${id})">
                 <div class="form-group">
                     <span class="editable-label">${labels['lbl-date']}</span>
-                    <input type="date" id="diaryDate" value="${entry.date}" required>
+                    <input type="date" id="diaryDate" value="${entry.date}" required onchange="onFormDateChange(this.value)">
+                </div>
+                <div class="form-group">
+                    <span class="editable-label">${labels['lbl-title']}</span>
+                    <input type="text" id="diaryTitle" value="${entry.title || ''}" placeholder="例: 外出、仕事、旅行など（省略可）">
                 </div>
                 <div class="form-group">
                     <span class="editable-label">${labels['lbl-weather']}</span>
@@ -782,6 +1058,7 @@
                 </div>
             </form>
         `;
+        renderCalendar();
     }
 
     function handleFileSelect(imgId, placeholderId) {
@@ -804,40 +1081,49 @@
 
     function saveNewDiary(e) {
         e.preventDefault();
+        const nb = getCurrentNotebook();
+        if (!nb) return;
+
         const newEntry = {
             id: Date.now(),
             date: document.getElementById('diaryDate').value,
+            title: document.getElementById('diaryTitle').value.trim(),
             weather: document.getElementById('diaryWeather').value,
             image: tempImageData,
             content: document.getElementById('diaryContent').value
         };
         
-        const nb = notebooks.find(n => n.id === currentNotebookId);
-        if (nb) {
-            nb.entries.unshift(newEntry);
-            nb.entries.sort((a,b) => new Date(b.date) - new Date(a.date));
-            saveAllData();
-            viewDiary(newEntry.id);
-        }
+        nb.entries.unshift(newEntry);
+        nb.entries.sort((a,b) => new Date(b.date) - new Date(a.date));
+        
+        // 履歴にプッシュ
+        pushToHistory(nb.id, nb.name, newEntry.id, newEntry.date, newEntry.title);
+        
+        saveAllData();
+        viewDiary(newEntry.id);
     }
 
     function saveEditDiary(e, id) {
         e.preventDefault();
-        const currentEntries = getCurrentEntries();
-        const entry = currentEntries.find(e => e.id === id);
+        const nb = getCurrentNotebook();
+        if (!nb) return;
+
+        const entry = nb.entries.find(e => e.id === id);
         if (!entry) return;
 
         entry.date = document.getElementById('diaryDate').value;
+        entry.title = document.getElementById('diaryTitle').value.trim();
         entry.weather = document.getElementById('diaryWeather').value;
         entry.content = document.getElementById('diaryContent').value;
         entry.image = tempImageData;
 
-        const nb = notebooks.find(n => n.id === currentNotebookId);
-        if (nb) {
-            nb.entries.sort((a,b) => new Date(b.date) - new Date(a.date));
-            saveAllData();
-            viewDiary(id);
-        }
+        nb.entries.sort((a,b) => new Date(b.date) - new Date(a.date));
+        
+        // 履歴にプッシュ（更新）
+        pushToHistory(nb.id, nb.name, entry.id, entry.date, entry.title);
+
+        saveAllData();
+        viewDiary(id);
     }
 
     function deleteEntry(id) {
@@ -845,7 +1131,11 @@
             const nb = notebooks.find(n => n.id === currentNotebookId);
             if (nb) {
                 nb.entries = nb.entries.filter(entry => entry.id !== id);
+                // 履歴からも削除
+                editHistory = editHistory.filter(h => !(h.notebookId === currentNotebookId && h.entryId === id));
                 saveAllData();
+                renderHistory();
+
                 const currentEntries = getCurrentEntries();
                 if (currentEntries.length > 0) {
                     viewDiary(currentEntries[0].id);
@@ -856,10 +1146,9 @@
         }
     }
 
-    // バックアップエクスポート (すべてのノートを包括)
     function exportData() {
         if (notebooks.length === 0) { alert("No data to export."); return; }
-        const backupData = { version: "2.0", notebooks: notebooks };
+        const backupData = { version: "2.0", notebooks: notebooks, editHistory: editHistory };
         const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: "application/json" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
@@ -871,49 +1160,43 @@
         URL.revokeObjectURL(url);
     }
 
-    // 復元インポート
     function importData(input) {
         const file = input.files[0];
         if (!file) return;
-        if (!confirm("データをインポートしますか？作成済みのすべての日記データが上書きされます。")) { input.value = ""; return; }
+        if (!confirm("データをインポートしますか？")) { input.value = ""; return; }
         const reader = new FileReader();
         reader.onload = function(e) {
             try {
                 const importedData = JSON.parse(e.target.result);
-                
-                // バージョン2（複数ノート）のデータ形式チェック
-                if (importedData.notebooks && importedData.notebooks.length > 0) {
+                if (importedData.notebooks) {
                     notebooks = importedData.notebooks;
                     currentNotebookId = notebooks[0].id;
-                }
-                // 旧バージョン（単一ノートのみ）の救済措置
-                else if (importedData.entries) {
-                    notebooks = [{ id: 'nb_default', name: '復元された日記', entries: importedData.entries }];
+                    editHistory = importedData.editHistory || [];
+                } else if (importedData.entries) {
+                    notebooks = [{ id: 'nb_default', name: '復元された日記', theme: 'theme-classic', entries: importedData.entries }];
                     currentNotebookId = 'nb_default';
+                    editHistory = [];
                 } else {
                     alert("無効なファイル形式です。");
                     return;
                 }
-
+                notebooks.forEach(nb => { if (!nb.theme) nb.theme = 'theme-classic'; });
                 saveAllData();
                 renderTabs();
+                updateNotebookHeader();
                 refreshSidebar();
-                
+                renderHistory();
                 const currentEntries = getCurrentEntries();
-                if (currentEntries.length > 0) {
-                    viewDiary(currentEntries[0].id);
-                } else {
-                    showNewForm();
-                }
-                alert("データを正常にインポートしました。");
+                if (currentEntries.length > 0) viewDiary(currentEntries[0].id);
+                else showNewForm();
+                alert("データをインポートしました。");
             } catch (err) {
-                alert("インポート中にエラーが発生しました。");
+                alert("エラーが発生しました。");
             }
             input.value = "";
         };
         reader.readAsText(file);
     }
 </script>
-
 </body>
 </html>
