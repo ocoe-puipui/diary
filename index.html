@@ -28,7 +28,7 @@
         body.theme-amber   { --bg-color: #fcf7f2; --accent-color: #c25c0e; --accent-hover: #964303; } /* ディープアンバー */
         body.theme-teal    { --bg-color: #f0f7f7; --accent-color: #006666; --accent-hover: #004d4d; } /* ディープティール */
         body.theme-gray    { --bg-color: #f5f6f6; --accent-color: #4a5568; --accent-hover: #2d3748; } /* スレートグレー */
-        body.theme-dark    { --bg-color: #eef0f1; --accent-color: #2c3e50; --accent-hover: #1a252f; } /* ミッドナイトブラック */
+        body.theme-dark    { --bg-color: #eef0f1; --accent-color: #2c3e50; --accent-hover: #1a252f; } /* ミッドmidnightブラック */
 
         body {
             background-color: var(--bg-color);
@@ -182,7 +182,7 @@
         }
 
         .notebook-panel.history-panel {
-            margin-top: 20px; /* カレンダーの下に配置するための余白 */
+            margin-top: 20px;
         }
 
         h2, h3 {
@@ -209,6 +209,26 @@
 
         .form-group { margin-bottom: 25px; }
 
+        .form-note {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--danger-color);
+            margin-top: 4px;
+            font-weight: 600;
+        }
+
+        /* さりげなく目立たないデータサイズ表示スタイル */
+        .file-size-badge {
+            display: inline-block;
+            color: var(--text-muted);
+            padding: 2px 0;
+            font-size: 0.75rem;
+            margin-top: 2px;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+            opacity: 0.85;
+        }
+
         input[type="text"], input[type="date"], select, textarea {
             width: 100%;
             padding: 12px;
@@ -230,18 +250,77 @@
 
         textarea { height: 180px; resize: vertical; line-height: 1.8; font-weight: 500; }
 
+        /* 天気入力用のコンボボックス風並び */
+        .weather-input-container {
+            display: flex;
+            gap: 10px;
+        }
+        .weather-input-container select {
+            flex: 1;
+        }
+        .weather-input-container input[type="text"] {
+            flex: 1;
+        }
+
+        /* 画像複数プレビュー・管理グリッド */
         .image-preview-area {
-            border: 2px dashed var(--accent-color);
+            border: 2px dashed var(--border-color);
             padding: 20px;
             text-align: center;
             background-color: #faf9f6;
             cursor: pointer;
             font-weight: 600;
+            transition: border-color 0.2s;
+            margin-bottom: 15px;
+            color: var(--text-muted); /* 文字色を薄いグレーに変更 */
         }
-        .image-preview-area img {
+        .image-preview-area:hover {
+            border-color: var(--accent-color);
+            color: var(--text-main);  /* ホバー時は少し濃くして視認性を上げる */
+        }
+        
+        /* フォーム内の複数画像プレビューコンテナ */
+        .form-images-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .form-image-item {
+            display: flex;
+            flex-direction: column;
+            background-color: #faf9f6;
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            padding: 8px;
+            box-sizing: border-box;
+            position: relative;
+        }
+        .form-image-item img {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 2px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        /* 閲覧画面の画像ギャラリー */
+        .diary-view-gallery {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .diary-view-image-wrapper {
+            background-color: #faf9f6;
+            padding: 15px;
+            border: 2px solid var(--border-color);
+            text-align: center;
+        }
+        .diary-view-image-wrapper img {
             max-width: 100%;
-            max-height: 250px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            max-height: 400px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
         }
 
         button {
@@ -281,13 +360,12 @@
             border-radius: 4px;
             padding: 10px 15px;
             font-size: 0.85rem;
-            font-weight: 600;
             text-align: center;
             cursor: pointer;
         }
         .file-input-label:hover { background-color: #faf9f6; }
 
-        /* 目次リスト（2行表示用） */
+        /* 目次リスト */
         .index-list, .history-list {
             list-style: none;
             padding: 0;
@@ -364,18 +442,6 @@
             color: var(--text-main);
             border-bottom: 2px solid var(--border-color);
             padding-bottom: 15px;
-        }
-        .diary-view-image {
-            text-align: center;
-            margin-bottom: 30px;
-            background-color: #faf9f6;
-            padding: 15px;
-            border: 2px solid var(--border-color);
-        }
-        .diary-view-image img {
-            max-width: 100%;
-            max-height: 350px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
         }
         .diary-view-text {
             font-size: 1.05rem;
@@ -493,9 +559,9 @@
     <div class="sidebar-left">
         <div class="notebook-panel">
             <button class="new-post-btn" onclick="showNewForm()">Write a Diary</button>
-            <h3>Index</h3>
+            <h3 style="margin-top: 20px;">Index</h3>
             <ul class="index-list" id="indexList" style="margin-bottom: 30px;"></ul>
-            <h3>Management</h3>
+            <h3 style="margin-top: 0;">Management</h3>
             <div>
                 <button class="backup-btn" onclick="exportData()">Export (Backup)</button>
                 <label class="file-input-label">
@@ -507,13 +573,15 @@
     </div>
 
     <!-- 中央：メインコンテンツ -->
-    <div class="notebook-panel" id="mainPanel"></div>
+    <div class="notebook-panel" id="mainPanel">
+        <!-- 初期表示はJSで設定されます -->
+    </div>
 
     <!-- 右側：サイドバー（カレンダー ＋ 横断的な編集履歴） -->
     <div class="sidebar-right">
         <!-- カレンダー -->
         <div class="notebook-panel">
-            <h3>Calendar</h3>
+            <h3 style="margin-top: 0;">Calendar</h3>
             <div class="calendar-header">
                 <button class="calendar-nav-btn" onclick="moveCalendar(-1)">◀</button>
                 <div class="calendar-title" id="calendarTitle">2026.07</div>
@@ -522,9 +590,9 @@
             <div class="calendar-grid" id="calendarGrid"></div>
         </div>
 
-        <!-- 追加：横断的な最近の編集履歴 -->
+        <!-- 横断的な最近の編集履歴 -->
         <div class="notebook-panel history-panel">
-            <h3>Recent Activity</h3>
+            <h3 style="margin-top: 0;">Recent Activity</h3>
             <ul class="history-list" id="historyList"></ul>
         </div>
     </div>
@@ -535,21 +603,19 @@
         { id: 'nb_default', name: '日記1', theme: 'theme-classic', entries: [] }
     ];
     let currentNotebookId = localStorage.getItem('chronicle_current_nb_id') || 'nb_default';
-
-    // 横断編集履歴を保持するためのグローバル配列（最大5件）
     let editHistory = JSON.parse(localStorage.getItem('chronicle_edit_history')) || [];
 
     const labels = {
         'lbl-date': 'Date',
-        'lbl-title': 'Title (Optional)',
+        'lbl-title': 'Title',
         'lbl-weather': 'Weather',
-        'lbl-image': 'Photograph',
+        'lbl-image': 'Photographs',
         'lbl-content': 'Chronicle'
     };
     
     let currentSelectId = null;
     let currentFormDate = null;
-    let tempImageData = "";
+    let tempImagesArray = []; // 複数の画像を保持する配列 [ { id, data }, ... ]
 
     let calendarYear = new Date().getFullYear();
     let calendarMonth = new Date().getMonth();
@@ -558,12 +624,23 @@
         if (!notebooks.find(nb => nb.id === currentNotebookId)) {
             currentNotebookId = notebooks[0].id;
         }
-        notebooks.forEach(nb => { if (!nb.theme) nb.theme = 'theme-classic'; });
+        notebooks.forEach(nb => {
+            if (!nb.theme) nb.theme = 'theme-classic';
+            // 過去データ（単一画像）を複数画像配列に自動マイグレーション
+            nb.entries.forEach(entry => {
+                if (entry.image && !entry.images) {
+                    entry.images = [{ id: Date.now() + Math.random(), data: entry.image }];
+                    delete entry.image;
+                }
+                if (!entry.images) entry.images = [];
+                if (entry.weather === undefined) entry.weather = "";
+            });
+        });
 
         renderTabs();
         updateNotebookHeader();
         refreshSidebar();
-        renderHistory(); // 履歴の描画
+        renderHistory();
         
         const currentEntries = getCurrentEntries();
         if (currentEntries.length > 0) {
@@ -583,17 +660,17 @@
     }
 
     function saveAllData() {
-        localStorage.setItem('chronicle_notebooks', JSON.stringify(notebooks));
-        localStorage.setItem('chronicle_current_nb_id', currentNotebookId);
-        localStorage.setItem('chronicle_edit_history', JSON.stringify(editHistory));
+        try {
+            localStorage.setItem('chronicle_notebooks', JSON.stringify(notebooks));
+            localStorage.setItem('chronicle_current_nb_id', currentNotebookId);
+            localStorage.setItem('chronicle_edit_history', JSON.stringify(editHistory));
+        } catch (e) {
+            alert("⚠️ ブラウザの保存容量制限を超えたため、日記を保存できませんでした。不要な画像を削除するか、別の画像を試してください。");
+        }
     }
 
-    // 横断編集履歴に新しいログを追加・保存する関数
     function pushToHistory(notebookId, notebookName, entryId, entryDate, entryTitle) {
-        // 同じ日記ページの既存ログがあれば重複排除
         editHistory = editHistory.filter(h => !(h.notebookId === notebookId && h.entryId === entryId));
-        
-        // 先頭に追加
         editHistory.unshift({
             notebookId: notebookId,
             notebookName: notebookName,
@@ -603,16 +680,11 @@
             timestamp: new Date().getTime()
         });
 
-        // 最大5件に絞る
-        if (editHistory.length > 5) {
-            editHistory = editHistory.slice(0, 5);
-        }
-        
+        if (editHistory.length > 5) editHistory = editHistory.slice(0, 5);
         saveAllData();
         renderHistory();
     }
 
-    // 履歴セクションを描画する関数
     function renderHistory() {
         const historyList = document.getElementById('historyList');
         historyList.innerHTML = '';
@@ -623,7 +695,6 @@
         }
 
         editHistory.forEach(h => {
-            // 現在の全データから対象ノートおよび日記が実在するか確認（削除対策）
             const nbExist = notebooks.find(n => n.id === h.notebookId);
             if (!nbExist) return;
             const entryExist = nbExist.entries.find(e => e.id === h.entryId);
@@ -637,19 +708,17 @@
             
             let bottomRow = '';
             if (h.entryTitle) {
-                bottomRow = `<div class="history-row-bottom">${h.entryTitle}</div>`;
+                bottomRow = `<div class="history-row-bottom" title="${h.entryTitle}">${h.entryTitle}</div>`;
             } else {
                 bottomRow = `<div class="history-row-bottom empty-title">(タイトルなし)</div>`;
             }
 
             li.innerHTML = topRow + bottomRow;
-            // クリック時、ノートを跨いで対象の日記を表示するリンク機能
             li.onclick = () => jumpToDiary(h.notebookId, h.entryId);
             historyList.appendChild(li);
         });
     }
 
-    // 履歴から別の日記帳（ノート）の特定のページへジャンプする処理
     function jumpToDiary(notebookId, entryId) {
         currentNotebookId = notebookId;
         currentSelectId = entryId;
@@ -666,6 +735,16 @@
         const body = document.getElementById('appBody');
         body.className = '';
         body.classList.add(themeName || 'theme-classic');
+    }
+
+    function formatBytes(base64String) {
+        if (!base64String) return "";
+        const padding = (base64String.match(/=/g) || []).length;
+        const sizeInBytes = (base64String.length * 3 / 4) - padding;
+        
+        if (sizeInBytes < 1024) return sizeInBytes + " Bytes";
+        else if (sizeInBytes < 1048576) return (sizeInBytes / 1024).toFixed(1) + " KB";
+        else return (sizeInBytes / 1048576).toFixed(1) + " MB";
     }
 
     function updateNotebookHeader() {
@@ -764,7 +843,7 @@
                 saveAllData();
                 renderTabs();
                 updateNotebookHeader();
-                renderHistory(); // 履歴側の表記も更新するため再描画
+                renderHistory();
             }
         } else if (action === "2") {
             if (notebooks.length <= 1) {
@@ -774,7 +853,6 @@
             if (confirm(`本当に「${nb.name}」を中の日記データも含めてすべて削除しますか？`)) {
                 notebooks = notebooks.filter(n => n.id !== id);
                 if (currentNotebookId === id) currentNotebookId = notebooks[0].id;
-                // 履歴からも削除されたノートのデータを消す
                 editHistory = editHistory.filter(h => h.notebookId !== id);
                 saveAllData();
                 switchNotebook(currentNotebookId);
@@ -868,15 +946,10 @@
             const dateStr = `${calendarYear}-${String(calendarMonth + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
             
             const foundEntry = currentEntries.find(e => e.date === dateStr);
-            if (foundEntry) {
-                cell.classList.add('has-diary');
-            }
+            if (foundEntry) cell.classList.add('has-diary');
             
             cell.onclick = () => onCalendarCellClick(dateStr, foundEntry);
-
-            if (dateStr === activeDateString) {
-                cell.classList.add('is-active');
-            }
+            if (dateStr === activeDateString) cell.classList.add('is-active');
 
             grid.appendChild(cell);
         }
@@ -892,11 +965,8 @@
     }
 
     function onCalendarCellClick(dateStr, foundEntry) {
-        if (foundEntry) {
-            viewDiary(foundEntry.id);
-        } else {
-            showNewForm(dateStr);
-        }
+        if (foundEntry) viewDiary(foundEntry.id);
+        else showNewForm(dateStr);
     }
 
     function moveCalendar(direction) {
@@ -912,7 +982,11 @@
         const currentEntries = getCurrentEntries();
         const entry = currentEntries.find(e => e.id === id);
         const mainPanel = document.getElementById('mainPanel');
-        if (!entry) return;
+
+        if (!entry) {
+            showNewForm();
+            return;
+        }
 
         refreshSidebar();
 
@@ -923,32 +997,79 @@
         }
         renderCalendar();
 
-        const idx = currentEntries.indexOf(entry);
-        const pageNum = currentEntries.length - idx;
-        const imgHtml = entry.image ? `<div class="diary-view-image"><img src="${entry.image}"></div>` : '';
+        // 画像ギャラリー表示の生成（複数枚対応）
+        let galleryHtml = '';
+        if (entry.images && entry.images.length > 0) {
+            galleryHtml = '<div class="diary-view-gallery">';
+            entry.images.forEach(imgObj => {
+                galleryHtml += `
+                    <div class="diary-view-image-wrapper">
+                        <img src="${imgObj.data}" alt="Diary Image">
+                        <div style="text-align:right;"><span class="file-size-badge">Size: ${formatBytes(imgObj.data)}</span></div>
+                    </div>`;
+            });
+            galleryHtml += '</div>';
+        }
+
         const titleHtml = entry.title ? `<div class="diary-view-title">📌 ${entry.title}</div>` : '';
+        const weatherDisplay = entry.weather ? entry.weather : '<span style="color:#b0a99f; font-style:italic;"省略可</span>';
 
         mainPanel.innerHTML = `
-            <h2>Page.${pageNum}</h2>
+            <h2 style="border-bottom: 3px solid var(--accent-color);">${labels['lbl-content']}</h2>
             ${titleHtml}
             <div class="diary-view-header">
                 <div>📅 <strong>${labels['lbl-date']}:</strong> ${formatJapaneseDate(entry.date)}</div>
-                <div><strong>${labels['lbl-weather']}:</strong> ${entry.weather}</div>
+                <div><strong>${labels['lbl-weather']}:</strong> ${weatherDisplay}</div>
             </div>
-            ${imgHtml}
-            <div style="font-size:0.85rem; color:var(--accent-color); margin-bottom:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em;">${labels['lbl-content']}</div>
+            ${galleryHtml}
             <div class="diary-view-text">${entry.content}</div>
             
             <div class="action-buttons">
-                <button class="edit-entry-btn" onclick="showEditForm(${entry.id})">Edit Entry</button>
-                <button class="delete-btn" onclick="deleteEntry(${entry.id})">Delete</button>
+                <button class="edit-entry-btn" onclick="showEditForm(${entry.id})">✏️ Edit Entry</button>
+                <button class="delete-btn" onclick="deleteEntry(${entry.id})">🗑️ Delete</button>
             </div>
         `;
     }
 
+    // 天気選択用プルダウン＆手入力欄の連動を管理する共通ロジック
+    function handleWeatherSelection(selectEl, textInputId) {
+        const input = document.getElementById(textInputId);
+        if (selectEl.value === "__custom__") {
+            input.value = "";
+            input.style.display = "block";
+            input.focus();
+        } else {
+            input.value = selectEl.value;
+            input.style.display = "none";
+        }
+    }
+
+    function generateWeatherTemplate(currentWeather = "", textInputId = "diaryWeatherCustom", selectId = "diaryWeatherSelect") {
+        // 標準プリセット（豊富なアイコン）
+        const presets = ["", "☀️ Fine", "☁️ Cloudy", "☔ Rainy", "☃️ Snowy", "🌤️ Partly Sunny", "⛈️ Thunderstorm", "🌀 Typhoon", "🌫️ Foggy", "🌡️ Hot Day", "🍃 Windy"];
+        const isPreset = presets.includes(currentWeather);
+        
+        let selectHtml = `<select id="${selectId}" onchange="handleWeatherSelection(this, '${textInputId}')">`;
+        presets.forEach(p => {
+            const label = p === "" ? "   " : p;
+            const selected = (isPreset && currentWeather === p) ? "selected" : "";
+            selectHtml += `<option value="${p}" ${selected}>${label}</option>`;
+        });
+        
+        // プリセットにない文字が登録されている場合
+        const customSelected = (!isPreset && currentWeather !== "") ? "selected" : "";
+        selectHtml += `<option value="__custom__" ${customSelected}>その他</option>`;
+        selectHtml += `</select>`;
+
+        const inputStyle = customSelected ? "display:block;" : "display:none;";
+        const inputHtml = `<input type="text" id="${textInputId}" value="${currentWeather}" placeholder="天気を自由に入力..." style="${inputStyle}">`;
+
+        return `<div class="weather-input-container">${selectHtml}${inputHtml}</div>`;
+    }
+
     function showNewForm(targetDateStr = null) {
         currentSelectId = null;
-        tempImageData = "";
+        tempImagesArray = []; // 画像配列をクリア
 
         const finalDateStr = targetDateStr || new Date().toISOString().substring(0, 10);
         currentFormDate = finalDateStr;
@@ -957,33 +1078,33 @@
         syncCalendarMonth(finalDateStr);
 
         const mainPanel = document.getElementById('mainPanel');
+        
         mainPanel.innerHTML = `
-            <h2>New Entry</h2>
-            <form id="diaryForm" onsubmit="saveNewDiary(event)">
+            <h2 id="formTitle">New Entry</h2>
+            <div id="loadingIndicator" style="text-align:center; padding: 30px; font-size:1.1rem; color:var(--accent-color); font-weight:600;">⏳ Loading... Please wait while preparing the form.</div>
+            <form id="diaryForm" onsubmit="saveNewDiary(event)" style="display: none;">
                 <div class="form-group">
                     <span class="editable-label">${labels['lbl-date']}</span>
                     <input type="date" id="diaryDate" value="${finalDateStr}" required onchange="onFormDateChange(this.value)">
                 </div>
                 <div class="form-group">
                     <span class="editable-label">${labels['lbl-title']}</span>
-                    <input type="text" id="diaryTitle" placeholder="例: 外出、仕事、旅行など（省略可）">
+                    <input type="text" id="diaryTitle" placeholder="例: （省略可）">
                 </div>
                 <div class="form-group">
                     <span class="editable-label">${labels['lbl-weather']}</span>
-                    <select id="diaryWeather">
-                        <option value="☀️ Fine">☀️ Fine</option>
-                        <option value="☁️ Cloudy">☁️ Cloudy</option>
-                        <option value="☔ Rainy">☔ Rainy</option>
-                        <option value="☃️ Snowy">☃️ Snowy</option>
-                    </select>
+                    ${generateWeatherTemplate("")}
                 </div>
                 <div class="form-group">
                     <span class="editable-label">${labels['lbl-image']}</span>
+                    <span class="form-note">3MB 未満推奨（最大3枚）</span>
                     <div class="image-preview-area" onclick="document.getElementById('diaryImage').click()">
-                        <span id="previewPlaceholder">Click to select an image</span>
-                        <img id="imagePreview" src="" style="display: none;">
+                        <span>Click to add a photograph</span>
                     </div>
-                    <input type="file" id="diaryImage" accept="image/*" style="display: none;" onchange="handleFileSelect('imagePreview', 'previewPlaceholder')">
+                    <input type="file" id="diaryImage" accept="image/*" multiple style="display: none;" onchange="handleFileSelectMulti()">
+                    
+                    <!-- 選択された複数画像のプレビューコンテナ -->
+                    <div class="form-images-grid" id="formImagesGrid"></div>
                 </div>
                 <div class="form-group">
                     <span class="editable-label">${labels['lbl-content']}</span>
@@ -992,6 +1113,71 @@
                 <button type="submit">Save to Chronicle</button>
             </form>
         `;
+
+        setTimeout(() => {
+            const loading = document.getElementById('loadingIndicator');
+            const form = document.getElementById('diaryForm');
+            if (loading) loading.style.display = 'none';
+            if (form) form.style.display = 'block';
+        }, 150);
+    }
+
+    function showEditForm(id) {
+        const currentEntries = getCurrentEntries();
+        const entry = currentEntries.find(e => e.id === id);
+        if (!entry) return;
+
+        // 画像配列のディープコピー（編集をキャンセルしたときに壊さないため）
+        tempImagesArray = entry.images ? [...entry.images] : [];
+        currentFormDate = entry.date;
+        const mainPanel = document.getElementById('mainPanel');
+        
+        mainPanel.innerHTML = `
+            <h2 id="formTitle">Edit Page.${currentEntries.length - currentEntries.indexOf(entry)}</h2>
+            <div id="loadingIndicator" style="text-align:center; padding: 30px; font-size:1.1rem; color:var(--accent-color); font-weight:600;">⏳ Loading... Please wait while loading the entry details.</div>
+            <form id="diaryForm" onsubmit="saveEditDiary(event, ${id})" style="display: none;">
+                <div class="form-group">
+                    <span class="editable-label">${labels['lbl-date']}</span>
+                    <input type="date" id="diaryDate" value="${entry.date}" required onchange="onFormDateChange(this.value)">
+                </div>
+                <div class="form-group">
+                    <span class="editable-label">${labels['lbl-title']}</span>
+                    <input type="text" id="diaryTitle" value="${entry.title || ''}" placeholder="例: 外出、仕事、旅行など（省略可）">
+                </div>
+                <div class="form-group">
+                    <span class="editable-label">${labels['lbl-weather']}</span>
+                    ${generateWeatherTemplate(entry.weather || "")}
+                </div>
+                <div class="form-group">
+                    <span class="editable-label">${labels['lbl-image']}</span>
+                    <span class="form-note">3MB未満の画像を推奨（複数追加可能）</span>
+                    <div class="image-preview-area" onclick="document.getElementById('diaryImage').click()">
+                        <span>Click to add a photograph</span>
+                    </div>
+                    <input type="file" id="diaryImage" accept="image/*" multiple style="display: none;" onchange="handleFileSelectMulti()">
+                    
+                    <div class="form-images-grid" id="formImagesGrid"></div>
+                </div>
+                <div class="form-group">
+                    <span class="editable-label">${labels['lbl-content']}</span>
+                    <textarea id="diaryContent" required>${entry.content}</textarea>
+                </div>
+                <div class="action-buttons" style="border:none; padding:0; margin:0;">
+                    <button type="submit">Save Changes</button>
+                    <button type="button" class="delete-btn" style="padding:12px 20px; border-radius:2px;" onclick="viewDiary(${id})">Cancel</button>
+                </div>
+            </form>
+        `;
+
+        // 読み込み完了後に既存 of 画像プレビューを展開
+        renderFormImagesGrid();
+
+        setTimeout(() => {
+            const loading = document.getElementById('loadingIndicator');
+            const form = document.getElementById('diaryForm');
+            if (loading) loading.style.display = 'none';
+            if (form) form.style.display = 'block';
+        }, 150);
     }
 
     function onFormDateChange(val) {
@@ -1008,75 +1194,80 @@
         }
     }
 
-    function showEditForm(id) {
-        const currentEntries = getCurrentEntries();
-        const entry = currentEntries.find(e => e.id === id);
-        if (!entry) return;
+    // 複数画像ファイルが選択された時の処理
+    function handleFileSelectMulti() {
+        const files = document.getElementById('diaryImage').files;
+        if (!files || files.length === 0) return;
 
-        tempImageData = entry.image;
-        currentFormDate = entry.date;
-        const mainPanel = document.getElementById('mainPanel');
+        const maxSizeBytes = 3 * 1024 * 1024;
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const form = document.getElementById('diaryForm');
+
+        if (loadingIndicator) loadingIndicator.style.display = 'block';
+        if (form) form.style.display = 'none';
+
+        let loadedCount = 0;
         
-        mainPanel.innerHTML = `
-            <h2>Edit Page.${currentEntries.length - currentEntries.indexOf(entry)}</h2>
-            <form id="diaryForm" onsubmit="saveEditDiary(event, ${id})">
-                <div class="form-group">
-                    <span class="editable-label">${labels['lbl-date']}</span>
-                    <input type="date" id="diaryDate" value="${entry.date}" required onchange="onFormDateChange(this.value)">
-                </div>
-                <div class="form-group">
-                    <span class="editable-label">${labels['lbl-title']}</span>
-                    <input type="text" id="diaryTitle" value="${entry.title || ''}" placeholder="例: 外出、仕事、旅行など（省略可）">
-                </div>
-                <div class="form-group">
-                    <span class="editable-label">${labels['lbl-weather']}</span>
-                    <select id="diaryWeather">
-                        <option value="☀️ Fine" ${entry.weather.includes('Fine')?'selected':''}>☀️ Fine</option>
-                        <option value="☁️ Cloudy" ${entry.weather.includes('Cloudy')?'selected':''}>☁️ Cloudy</option>
-                        <option value="☔ Rainy" ${entry.weather.includes('Rainy')?'selected':''}>☔ Rainy</option>
-                        <option value="☃️ Snowy" ${entry.weather.includes('Snowy')?'selected':''}>☃️ Snowy</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <span class="editable-label">${labels['lbl-image']}</span>
-                    <div class="image-preview-area" onclick="document.getElementById('diaryImage').click()">
-                        <span id="previewPlaceholder" style="${entry.image?'display:none;':''}">Click to select an image</span>
-                        <img id="imagePreview" src="${entry.image || ''}" style="${entry.image?'display:block;':'display:none;'}">
-                    </div>
-                    <input type="file" id="diaryImage" accept="image/*" style="display: none;" onchange="handleFileSelect('imagePreview', 'previewPlaceholder')">
-                    <div style="margin-top:10px;">
-                        <button type="button" class="delete-btn" style="padding:6px 12px;" onclick="removeImage()">Remove Photograph</button>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <span class="editable-label">${labels['lbl-content']}</span>
-                    <textarea id="diaryContent" required>${entry.content}</textarea>
-                </div>
-                <div class="action-buttons" style="border:none; padding:0; margin:0;">
-                    <button type="submit">Save Changes</button>
-                    <button type="button" class="delete-btn" style="padding:12px 20px; border-radius:2px;" onclick="viewDiary(${id})">Cancel</button>
-                </div>
-            </form>
-        `;
-        renderCalendar();
-    }
+        // 各ファイルの読み込み処理（非同期ループ）
+        Array.from(files).forEach(file => {
+            if (file.size > maxSizeBytes) {
+                alert(`❌ ファイル「${file.name}」が大きすぎます (${(file.size / 1048576).toFixed(1)} MB)\n\n3MB以下の画像データを使用してください。`);
+                loadedCount++;
+                checkAllLoaded(loadedCount, files.length);
+                return;
+            }
 
-    function handleFileSelect(imgId, placeholderId) {
-        const file = document.getElementById('diaryImage').files[0];
-        const reader = new FileReader();
-        reader.onloadend = function () {
-            document.getElementById(imgId).src = reader.result;
-            document.getElementById(imgId).style.display = 'block';
-            document.getElementById(placeholderId).style.display = 'none';
-            tempImageData = reader.result;
+            const reader = new FileReader();
+            reader.onerror = function() {
+                alert(`❌ 「${file.name}」の読み込みに失敗しました。`);
+                loadedCount++;
+                checkAllLoaded(loadedCount, files.length);
+            };
+
+            reader.onloadend = function() {
+                tempImagesArray.push({
+                    id: Date.now() + Math.random(),
+                    data: reader.result
+                });
+                loadedCount++;
+                checkAllLoaded(loadedCount, files.length);
+            };
+            reader.readAsDataURL(file);
+        });
+
+        function checkAllLoaded(current, total) {
+            if (current >= total) {
+                document.getElementById('diaryImage').value = ""; // リセットして再選択を可能に
+                renderFormImagesGrid();
+                if (loadingIndicator) loadingIndicator.style.display = 'none';
+                if (form) form.style.display = 'block';
+            }
         }
-        if (file) reader.readAsDataURL(file);
     }
 
-    function removeImage() {
-        tempImageData = "";
-        document.getElementById('imagePreview').style.display = 'none';
-        document.getElementById('previewPlaceholder').style.display = 'block';
+    // フォーム内の画像プレビューグリッドを生成・更新する
+    function renderFormImagesGrid() {
+        const grid = document.getElementById('formImagesGrid');
+        if (!grid) return;
+        grid.innerHTML = '';
+
+        tempImagesArray.forEach((imgObj) => {
+            const item = document.createElement('div');
+            item.className = 'form-image-item';
+
+            item.innerHTML = `
+                <img src="${imgObj.data}" alt="Preview">
+                <span class="file-size-badge">${formatBytes(imgObj.data)}</span>
+                <button type="button" class="delete-btn" style="margin-top:5px; padding:4px 8px; font-size:0.75rem; width:100%;" onclick="removeFormImage(${imgObj.id})">Remove</button>
+            `;
+            grid.appendChild(item);
+        });
+    }
+
+    // 特定の1枚をプレビュー配列から削除する
+    function removeFormImage(id) {
+        tempImagesArray = tempImagesArray.filter(img => img.id !== id);
+        renderFormImagesGrid();
     }
 
     function saveNewDiary(e) {
@@ -1088,17 +1279,15 @@
             id: Date.now(),
             date: document.getElementById('diaryDate').value,
             title: document.getElementById('diaryTitle').value.trim(),
-            weather: document.getElementById('diaryWeather').value,
-            image: tempImageData,
+            weather: document.getElementById('diaryWeatherCustom').value.trim(),
+            images: tempImagesArray,
             content: document.getElementById('diaryContent').value
         };
         
         nb.entries.unshift(newEntry);
         nb.entries.sort((a,b) => new Date(b.date) - new Date(a.date));
         
-        // 履歴にプッシュ
         pushToHistory(nb.id, nb.name, newEntry.id, newEntry.date, newEntry.title);
-        
         saveAllData();
         viewDiary(newEntry.id);
     }
@@ -1113,15 +1302,13 @@
 
         entry.date = document.getElementById('diaryDate').value;
         entry.title = document.getElementById('diaryTitle').value.trim();
-        entry.weather = document.getElementById('diaryWeather').value;
+        entry.weather = document.getElementById('diaryWeatherCustom').value.trim();
         entry.content = document.getElementById('diaryContent').value;
-        entry.image = tempImageData;
+        entry.images = tempImagesArray;
 
         nb.entries.sort((a,b) => new Date(b.date) - new Date(a.date));
         
-        // 履歴にプッシュ（更新）
         pushToHistory(nb.id, nb.name, entry.id, entry.date, entry.title);
-
         saveAllData();
         viewDiary(id);
     }
@@ -1131,7 +1318,6 @@
             const nb = notebooks.find(n => n.id === currentNotebookId);
             if (nb) {
                 nb.entries = nb.entries.filter(entry => entry.id !== id);
-                // 履歴からも削除
                 editHistory = editHistory.filter(h => !(h.notebookId === currentNotebookId && h.entryId === id));
                 saveAllData();
                 renderHistory();
@@ -1148,7 +1334,7 @@
 
     function exportData() {
         if (notebooks.length === 0) { alert("No data to export."); return; }
-        const backupData = { version: "2.0", notebooks: notebooks, editHistory: editHistory };
+        const backupData = { version: "3.0", notebooks: notebooks, editHistory: editHistory };
         const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: "application/json" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
@@ -1163,7 +1349,8 @@
     function importData(input) {
         const file = input.files[0];
         if (!file) return;
-        if (!confirm("データをインポートしますか？")) { input.value = ""; return; }
+        if (!confirm("データをインポートしますか？既存のデータは上書きされます。")) { input.value = ""; return; }
+        
         const reader = new FileReader();
         reader.onload = function(e) {
             try {
@@ -1180,7 +1367,19 @@
                     alert("無効なファイル形式です。");
                     return;
                 }
-                notebooks.forEach(nb => { if (!nb.theme) nb.theme = 'theme-classic'; });
+                
+                // データ構造の再マイグレーション
+                notebooks.forEach(nb => {
+                    if (!nb.theme) nb.theme = 'theme-classic';
+                    nb.entries.forEach(entry => {
+                        if (entry.image && !entry.images) {
+                            entry.images = [{ id: Date.now() + Math.random(), data: entry.image }];
+                            delete entry.image;
+                        }
+                        if (!entry.images) entry.images = [];
+                    });
+                });
+
                 saveAllData();
                 renderTabs();
                 updateNotebookHeader();
@@ -1189,9 +1388,9 @@
                 const currentEntries = getCurrentEntries();
                 if (currentEntries.length > 0) viewDiary(currentEntries[0].id);
                 else showNewForm();
-                alert("データをインポートしました。");
+                alert("✅ データをインポートしました。");
             } catch (err) {
-                alert("エラーが発生しました。");
+                alert(`❌ エラーが発生しました: ${err.message}`);
             }
             input.value = "";
         };
