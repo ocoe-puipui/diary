@@ -28,7 +28,7 @@
         body.theme-amber   { --bg-color: #fcf7f2; --accent-color: #c25c0e; --accent-hover: #964303; } /* ディープアンバー */
         body.theme-teal    { --bg-color: #f0f7f7; --accent-color: #006666; --accent-hover: #004d4d; } /* ディープティール */
         body.theme-gray    { --bg-color: #f5f6f6; --accent-color: #4a5568; --accent-hover: #2d3748; } /* スレートグレー */
-        body.theme-dark    { --bg-color: #eef0f1; --accent-color: #2c3e50; --accent-hover: #1a252f; } /* ミッドナイトブラック */
+        body.theme-dark    { --bg-color: #eef0f1; --accent-color: #2c3e50; --accent-hover: #1a252f; } /* ミッドmidnightブラック */
 
         body {
             background-color: var(--bg-color);
@@ -609,8 +609,8 @@
         'lbl-date': 'Date',
         'lbl-title': 'Title',
         'lbl-weather': 'Weather',
-        'lbl-image': 'Photographs',
-        'lbl-content': 'Chronicle'
+        'lbl-image': 'Pictures',
+        'lbl-content': 'Note'
     };
     
     let currentSelectId = null;
@@ -1062,7 +1062,7 @@
         selectHtml += `</select>`;
 
         const inputStyle = customSelected ? "display:block;" : "display:none;";
-        const inputHtml = `<input type="text" id="${textInputId}" value="${currentWeather}" placeholder="天気を自由に入力..." style="${inputStyle}">`;
+        const inputHtml = `<input type="text" id="${textInputId}" value="${currentWeather}" placeholder="ジメジメ など" style="${inputStyle}">`;
 
         return `<div class="weather-input-container">${selectHtml}${inputHtml}</div>`;
     }
@@ -1089,7 +1089,7 @@
                 </div>
                 <div class="form-group">
                     <span class="editable-label">${labels['lbl-title']}</span>
-                    <input type="text" id="diaryTitle" placeholder="例: （省略可）">
+                    <input type="text" id="diaryTitle" placeholder=" 省略可">
                 </div>
                 <div class="form-group">
                     <span class="editable-label">${labels['lbl-weather']}</span>
@@ -1097,9 +1097,9 @@
                 </div>
                 <div class="form-group">
                     <span class="editable-label">${labels['lbl-image']}</span>
-                    <span class="form-note">3MB 未満推奨（最大3枚）</span>
+                    <span class="form-note">Max 3MB • Up to 3 images</span>
                     <div class="image-preview-area" onclick="document.getElementById('diaryImage').click()">
-                        <span>Click to add a photograph</span>
+                        <span>Click to add a picture</span>
                     </div>
                     <input type="file" id="diaryImage" accept="image/*" multiple style="display: none;" onchange="handleFileSelectMulti()">
                     
@@ -1108,7 +1108,7 @@
                 </div>
                 <div class="form-group">
                     <span class="editable-label">${labels['lbl-content']}</span>
-                    <textarea id="diaryContent" placeholder="Describe your day..." required></textarea>
+                    <textarea id="diaryContent" placeholder="Describe" required></textarea>
                 </div>
                 <button type="submit">Save to Chronicle</button>
             </form>
