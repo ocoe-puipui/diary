@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chronicle - 多機能絵日記帳 2026-07-04 18:38</title>
+    <title>Chronicle - 多機能絵日記帳 2026/07/04 21:12:11</title>
     <style>
         :root {
             --panel-bg: #ffffff;          /* 基本のパネル背景 */
@@ -352,6 +352,7 @@
             margin-bottom: 12px;
             font-size: 0.85rem;
             font-weight: 600;
+            text-transform: lowercase; /* 小文字統一のため念のためCSSでも指定 */
         }
         .backup-btn:hover { background-color: #faf9f6; }
         
@@ -368,6 +369,7 @@
             font-size: 0.85rem;
             text-align: center;
             cursor: pointer;
+            text-transform: lowercase; /* 小文字統一のため追加 */
         }
         .file-input-label:hover { background-color: #faf9f6; }
 
@@ -579,8 +581,8 @@
         <div class="theme-selector-item">
             <span>WRITING DIRECTION</span>
             <select id="notebookWritingMode" onchange="changeNotebookWritingMode(this.value === 'true')">
-                <option value="false">横書き (Horizontal)</option>
-                <option value="true">縦書き (Vertical)</option>
+                <option value="false">横書き Horizontal</option>
+                <option value="true">縦書き Vertical</option>
             </select>
         </div>
     </div>
@@ -590,14 +592,14 @@
     <!-- 左側：サイドバー（目次・管理） -->
     <div class="sidebar-left">
         <div class="notebook-panel">
-            <button class="new-post-btn" onclick="showNewForm()">Write a Diary</button>
-            <h3 style="margin-top: 20px;">Index</h3>
+            <button class="new-post-btn" id="newPostBtn" onclick="showNewForm()">Write a Diary</button>
+            <h3 id="indexHeader" style="margin-top: 20px;">Index</h3>
             <ul class="index-list" id="indexList" style="margin-bottom: 30px;"></ul>
-            <h3 style="margin-top: 0;">Management</h3>
+            <h3 id="mgmtHeader" style="margin-top: 0;">Management</h3>
             <div>
-                <button class="backup-btn" onclick="exportData()">Export (Backup)</button>
-                <label class="file-input-label">
-                    Import (Restore)
+                <button class="backup-btn" onclick="exportData()">export (backup)</button>
+                <label class="file-input-label" id="importLabel">
+                    import (restore)
                     <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(this)">
                 </label>
             </div>
@@ -613,7 +615,7 @@
     <div class="sidebar-right">
         <!-- カレンダー -->
         <div class="notebook-panel">
-            <h3 style="margin-top: 0;">Calendar</h3>
+            <h3 id="calendarHeader" style="margin-top: 0;">Calendar</h3>
             <div class="calendar-header">
                 <button class="calendar-nav-btn" onclick="moveCalendar(-1)">◀</button>
                 <div class="calendar-title" id="calendarTitle">2026.07</div>
@@ -624,7 +626,7 @@
 
         <!-- 横断的な最近の編集履歴 -->
         <div class="notebook-panel history-panel">
-            <h3 style="margin-top: 0;">Recent Activity</h3>
+            <h3 id="activityHeader" style="margin-top: 0;">Recent Activity</h3>
             <ul class="history-list" id="historyList"></ul>
         </div>
     </div>
@@ -637,13 +639,82 @@
     let currentNotebookId = localStorage.getItem('chronicle_current_nb_id') || 'nb_default';
     let editHistory = JSON.parse(localStorage.getItem('chronicle_edit_history')) || [];
 
-    const labels = {
-        'lbl-date': 'Date',
-        'lbl-title': 'Title',
-        'lbl-weather': 'Weather',
-        'lbl-image': 'Pictures',
-        'lbl-content': 'Note'
-    };
+    // 表示文言のオブジェクト定義
+    let labels = {};
+
+    // 縦書き・横書きに応じてUI言語を切り替える関数
+    function updateLabels(isVertical) {
+        if (isVertical) {
+            // 日本語UI（縦書き時）
+            labels = {
+                'lbl-date': '日付',
+                'lbl-title': 'タイトル',
+                'lbl-weather': '天気',
+                'lbl-image': '写真',
+                'lbl-content': '本文',
+                'btn-write': '日記を書く',
+                'hd-index': '目次',
+                'hd-mgmt': '管理',
+                'hd-calendar': 'カレンダー',
+                'hd-activity': '最近の履歴',
+                'text-no-entries': 'まだ日記がありません。',
+                'text-no-activity': '最近の履歴はありません。',
+                'text-empty-title': '(タイトルなし)',
+                'text-optional': '  ',
+                'text-custom-weather': 'その他',
+                'text-weather-placeholder': 'ジメジメ など',
+                'text-form-note': '3MB未満の画像を推奨（複数追加可能）',
+                'text-click-image': 'クリックして写真を追加',
+                'text-content-placeholder': 'ここに日記の内容を入力してください',
+                'btn-save-new': '日記を保存する',
+                'btn-save-edit': '変更を保存する',
+                'btn-cancel': 'キャンセル',
+                'text-loading-form': '⏳ フォームの準備中です。少々お待ちください。',
+                'text-loading-edit': '⏳ 日記データを読み込んでいます。少々お待ちください。'
+            };
+        } else {
+            // 英語UI（横書き時）
+            labels = {
+                'lbl-date': 'Date',
+                'lbl-title': 'Title',
+                'lbl-weather': 'Weather',
+                'lbl-image': 'Pictures',
+                'lbl-content': 'Note',
+                'btn-write': 'Write a Diary',
+                'hd-index': 'Index',
+                'hd-mgmt': 'Management',
+                'hd-calendar': 'Calendar',
+                'hd-activity': 'Recent Activity',
+                'text-no-entries': 'No entries yet.',
+                'text-no-activity': 'No recent activity.',
+                'text-empty-title': '(no title)',
+                'text-optional': 'Optional',
+                'text-custom-weather': 'Custom',
+                'text-weather-placeholder': 'e.g. Humid',
+                'text-form-note': 'Max 3MB • Up to 3 images',
+                'text-click-image': 'Click to add a picture',
+                'text-content-placeholder': 'Describe your day...',
+                'btn-save-new': 'Save to Chronicle',
+                'btn-save-edit': 'Save Changes',
+                'btn-cancel': 'Cancel',
+                'text-loading-form': '⏳ Loading... Please wait while preparing the form.',
+                'text-loading-edit': '⏳ Loading... Please wait while loading the entry details.'
+            };
+        }
+
+        // 固定メニューのテキスト書き換え
+        const newPostBtn = document.getElementById('newPostBtn');
+        const indexHeader = document.getElementById('indexHeader');
+        const mgmtHeader = document.getElementById('mgmtHeader');
+        const calendarHeader = document.getElementById('calendarHeader');
+        const activityHeader = document.getElementById('activityHeader');
+
+        if (newPostBtn) newPostBtn.innerText = labels['btn-write'];
+        if (indexHeader) indexHeader.innerText = labels['hd-index'];
+        if (mgmtHeader) mgmtHeader.innerText = labels['hd-mgmt'];
+        if (calendarHeader) calendarHeader.innerText = labels['hd-calendar'];
+        if (activityHeader) activityHeader.innerText = labels['hd-activity'];
+    }
     
     let currentSelectId = null;
     let currentFormDate = null;
@@ -669,6 +740,9 @@
                 if (entry.weather === undefined) entry.weather = "";
             });
         });
+
+        const nb = getCurrentNotebook();
+        updateLabels(nb ? nb.isVertical : false);
 
         renderTabs();
         updateNotebookHeader();
@@ -745,8 +819,11 @@
         if (nb) {
             nb.isVertical = isVertical;
             saveAllData();
+            updateLabels(isVertical); // ラベルの表示切り替え
             if (currentSelectId) {
                 viewDiary(currentSelectId);
+            } else {
+                showNewForm(currentFormDate);
             }
         }
     }
@@ -756,7 +833,7 @@
         historyList.innerHTML = '';
 
         if (editHistory.length === 0) {
-            historyList.innerHTML = '<li style="color:var(--text-muted);font-size:0.85rem;font-weight:600;padding:10px 0;text-align:center;">No recent activity.</li>';
+            historyList.innerHTML = `<li style="color:var(--text-muted);font-size:0.85rem;font-weight:600;padding:10px 0;text-align:center;">${labels['text-no-activity']}</li>`;
             return;
         }
 
@@ -776,7 +853,7 @@
             if (h.entryTitle) {
                 bottomRow = `<div class="history-row-bottom" title="${h.entryTitle}">${h.entryTitle}</div>`;
             } else {
-                bottomRow = `<div class="history-row-bottom empty-title">(タイトルなし)</div>`;
+                bottomRow = `<div class="history-row-bottom empty-title">${labels['text-empty-title']}</div>`;
             }
 
             li.innerHTML = topRow + bottomRow;
@@ -790,6 +867,9 @@
         currentSelectId = entryId;
         currentFormDate = null;
         
+        const nb = getCurrentNotebook();
+        updateLabels(nb ? nb.isVertical : false);
+
         saveAllData();
         renderTabs();
         updateNotebookHeader();
@@ -851,6 +931,10 @@
         currentNotebookId = id;
         currentSelectId = null;
         currentFormDate = null;
+
+        const nb = getCurrentNotebook();
+        updateLabels(nb ? nb.isVertical : false);
+
         saveAllData();
         renderTabs();
         updateNotebookHeader();
@@ -925,7 +1009,7 @@
         const currentEntries = getCurrentEntries();
 
         if (currentEntries.length === 0) {
-            indexList.innerHTML = '<li style="color:var(--text-muted);font-size:0.9rem;font-weight:600;padding:10px 0;text-align:center;">No entries yet.</li>';
+            indexList.innerHTML = `<li style="color:var(--text-muted);font-size:0.9rem;font-weight:600;padding:10px 0;text-align:center;">${labels['text-no-entries']}</li>`;
             return;
         }
 
@@ -941,7 +1025,7 @@
             if (entry.title) {
                 bottomRow = `<div class="index-row-bottom" title="${entry.title}">${entry.title}</div>`;
             } else {
-                bottomRow = `<div class="index-row-bottom empty-title">(タイトルなし)</div>`;
+                bottomRow = `<div class="index-row-bottom empty-title">${labels['text-empty-title']}</div>`;
             }
 
             li.innerHTML = topRow + bottomRow;
@@ -1034,6 +1118,8 @@
             return;
         }
 
+        // 表示前に言語ラベル状態を最新化
+        updateLabels(nb ? nb.isVertical : false);
         refreshSidebar();
 
         const entryDate = new Date(entry.date);
@@ -1058,7 +1144,7 @@
         }
 
         const titleHtml = entry.title ? `<div class="diary-view-title">📌 ${entry.title}</div>` : '';
-        const weatherDisplay = entry.weather ? entry.weather : '<span style="color:#b0a99f; font-style:italic;">省略可</span>';
+        const weatherDisplay = entry.weather ? entry.weather : `<span style="color:#b0a99f; font-style:italic;">${labels['text-optional']}</span>`;
 
         // 縦書きフラグに応じてクラスを付与
         const textClass = (nb && nb.isVertical) ? 'diary-view-text vertical' : 'diary-view-text';
@@ -1095,7 +1181,7 @@
 
     function generateWeatherTemplate(currentWeather = "", textInputId = "diaryWeatherCustom", selectId = "diaryWeatherSelect") {
         // 標準プリセット（豊富なアイコン）
-        const presets = ["", "☀️ Fine", "☁️ Cloudy", "☔ Rainy", "☃️ Snowy", "🌤️ Partly Sunny", "⛈️ Thunderstorm", "🌀 Typhoon", "🌫️ Foggy", "🌡️ Hot Day", "🍃 Windy"];
+        const presets = ["", "☀️", "☁️", "☔", "☃️", "🌤️", "⛈️", "🌀", "🌫️ ", "🌡️", "🍃"];
         const isPreset = presets.includes(currentWeather);
         
         let selectHtml = `<select id="${selectId}" onchange="handleWeatherSelection(this, '${textInputId}')">`;
@@ -1107,11 +1193,11 @@
         
         // プリセットにない文字が登録されている場合
         const customSelected = (!isPreset && currentWeather !== "") ? "selected" : "";
-        selectHtml += `<option value="__custom__" ${customSelected}>その他</option>`;
+        selectHtml += `<option value="__custom__" ${customSelected}>${labels['text-custom-weather']}</option>`;
         selectHtml += `</select>`;
 
         const inputStyle = customSelected ? "display:block;" : "display:none;";
-        const inputHtml = `<input type="text" id="${textInputId}" value="${currentWeather}" placeholder="ジメジメ など" style="${inputStyle}">`;
+        const inputHtml = `<input type="text" id="${textInputId}" value="${currentWeather}" placeholder="${labels['text-weather-placeholder']}" style="${inputStyle}">`;
 
         return `<div class="weather-input-container">${selectHtml}${inputHtml}</div>`;
     }
@@ -1130,7 +1216,7 @@
         
         mainPanel.innerHTML = `
             <h2 id="formTitle">New Entry</h2>
-            <div id="loadingIndicator" style="text-align:center; padding: 30px; font-size:1.1rem; color:var(--accent-color); font-weight:600;">⏳ Loading... Please wait while preparing the form.</div>
+            <div id="loadingIndicator" style="text-align:center; padding: 30px; font-size:1.1rem; color:var(--accent-color); font-weight:600;">${labels['text-loading-form']}</div>
             <form id="diaryForm" onsubmit="saveNewDiary(event)" style="display: none;">
                 <div class="form-group">
                     <span class="editable-label">${labels['lbl-date']}</span>
@@ -1138,7 +1224,7 @@
                 </div>
                 <div class="form-group">
                     <span class="editable-label">${labels['lbl-title']}</span>
-                    <input type="text" id="diaryTitle" placeholder=" 省略可">
+                    <input type="text" id="diaryTitle" placeholder=" ${labels['text-optional']}">
                 </div>
                 <div class="form-group">
                     <span class="editable-label">${labels['lbl-weather']}</span>
@@ -1146,9 +1232,9 @@
                 </div>
                 <div class="form-group">
                     <span class="editable-label">${labels['lbl-image']}</span>
-                    <span class="form-note">Max 3MB • Up to 3 images</span>
+                    <span class="form-note">${labels['text-form-note']}</span>
                     <div class="image-preview-area" onclick="document.getElementById('diaryImage').click()">
-                        <span>Click to add a picture</span>
+                        <span>${labels['text-click-image']}</span>
                     </div>
                     <input type="file" id="diaryImage" accept="image/*" multiple style="display: none;" onchange="handleFileSelectMulti()">
                     
@@ -1157,9 +1243,9 @@
                 </div>
                 <div class="form-group">
                     <span class="editable-label">${labels['lbl-content']}</span>
-                    <textarea id="diaryContent" placeholder="Describe" required></textarea>
+                    <textarea id="diaryContent" placeholder="${labels['text-content-placeholder']}" required></textarea>
                 </div>
-                <button type="submit">Save to Chronicle</button>
+                <button type="submit">${labels['btn-save-new']}</button>
             </form>
         `;
 
@@ -1183,7 +1269,7 @@
         
         mainPanel.innerHTML = `
             <h2 id="formTitle">Edit Page.${currentEntries.length - currentEntries.indexOf(entry)}</h2>
-            <div id="loadingIndicator" style="text-align:center; padding: 30px; font-size:1.1rem; color:var(--accent-color); font-weight:600;">⏳ Loading... Please wait while loading the entry details.</div>
+            <div id="loadingIndicator" style="text-align:center; padding: 30px; font-size:1.1rem; color:var(--accent-color); font-weight:600;">${labels['text-loading-edit']}</div>
             <form id="diaryForm" onsubmit="saveEditDiary(event, ${id})" style="display: none;">
                 <div class="form-group">
                     <span class="editable-label">${labels['lbl-date']}</span>
@@ -1191,7 +1277,7 @@
                 </div>
                 <div class="form-group">
                     <span class="editable-label">${labels['lbl-title']}</span>
-                    <input type="text" id="diaryTitle" value="${entry.title || ''}" placeholder="例: 外出、仕事、旅行など（省略可）">
+                    <input type="text" id="diaryTitle" value="${entry.title || ''}" placeholder="${labels['text-optional']}">
                 </div>
                 <div class="form-group">
                     <span class="editable-label">${labels['lbl-weather']}</span>
@@ -1199,9 +1285,9 @@
                 </div>
                 <div class="form-group">
                     <span class="editable-label">${labels['lbl-image']}</span>
-                    <span class="form-note">3MB未満の画像を推奨（複数追加可能）</span>
+                    <span class="form-note">${labels['text-form-note']}</span>
                     <div class="image-preview-area" onclick="document.getElementById('diaryImage').click()">
-                        <span>Click to add a photograph</span>
+                        <span>${labels['text-click-image']}</span>
                     </div>
                     <input type="file" id="diaryImage" accept="image/*" multiple style="display: none;" onchange="handleFileSelectMulti()">
                     
@@ -1212,8 +1298,8 @@
                     <textarea id="diaryContent" required>${entry.content}</textarea>
                 </div>
                 <div class="action-buttons" style="border:none; padding:0; margin:0;">
-                    <button type="submit">Save Changes</button>
-                    <button type="button" class="delete-btn" style="padding:12px 20px; border-radius:2px;" onclick="viewDiary(${id})">Cancel</button>
+                    <button type="submit">${labels['btn-save-edit']}</button>
+                    <button type="button" class="delete-btn" style="padding:12px 20px; border-radius:2px;" onclick="viewDiary(${id})">${labels['btn-cancel']}</button>
                 </div>
             </form>
         `;
@@ -1429,6 +1515,9 @@
                         if (!entry.images) entry.images = [];
                     });
                 });
+
+                const nb = getCurrentNotebook();
+                updateLabels(nb ? nb.isVertical : false);
 
                 saveAllData();
                 renderTabs();
