@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chronicle - 多機能絵日記帳 2026/07/04 14:46:48</title>
+    <title>Chronicle - 多機能絵日記帳 2026-07-04 18:38</title>
     <style>
         :root {
             --panel-bg: #ffffff;          /* 基本のパネル背景 */
@@ -140,10 +140,16 @@
         .theme-selector-wrapper {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 15px;
             font-size: 0.95rem;
             font-weight: 600;
             color: var(--text-main);
+            flex-wrap: wrap;
+        }
+        .theme-selector-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         .theme-selector-wrapper select {
             width: auto;
@@ -452,6 +458,23 @@
             min-height: 150px;
         }
         
+        /* 縦書きモード用スタイル */
+        .diary-view-text.vertical {
+            writing-mode: vertical-rl;
+            -webkit-writing-mode: vertical-rl;
+            letter-spacing: 0.1em;
+            line-height: 2.2;
+            height: 400px;
+            max-height: 70vh;
+            overflow-x: auto;
+            overflow-y: hidden;
+            width: 100%;
+            padding: 10px 0;
+            font-family: "Georgia", "Hiragino Mincho ProN", "BIZ UDMincho", serif;
+            box-sizing: border-box;
+            border-right: 1px dashed var(--border-color);
+        }
+        
         .action-buttons {
             display: flex;
             justify-content: flex-end;
@@ -538,19 +561,28 @@
 <div class="notebook-header-panel">
     <h1 class="current-notebook-title" id="currentNotebookTitle">📖 DIARY</h1>
     <div class="theme-selector-wrapper">
-        <span>COLOR THEME</span>
-        <select id="notebookGlobalTheme" onchange="changeNotebookTheme(this.value)">
-            <option value="theme-classic">1. Sienna Brown</option>
-            <option value="theme-green">2. Forest Green</option>
-            <option value="theme-blue">3. Deep Blue</option>
-            <option value="theme-red">4. Dark Red</option>
-            <option value="theme-pink">5. Rose Magenta</option>
-            <option value="theme-purple">6. Royal Purple</option>
-            <option value="theme-amber">7. Deep Amber</option>
-            <option value="theme-teal">8. Deep Teal</option>
-            <option value="theme-gray">9. Slate Gray</option>
-            <option value="theme-dark">10. Midnight Black</option>
-        </select>
+        <div class="theme-selector-item">
+            <span>COLOR THEME</span>
+            <select id="notebookGlobalTheme" onchange="changeNotebookTheme(this.value)">
+                <option value="theme-classic">1. Sienna Brown</option>
+                <option value="theme-green">2. Forest Green</option>
+                <option value="theme-blue">3. Deep Blue</option>
+                <option value="theme-red">4. Dark Red</option>
+                <option value="theme-pink">5. Rose Magenta</option>
+                <option value="theme-purple">6. Royal Purple</option>
+                <option value="theme-amber">7. Deep Amber</option>
+                <option value="theme-teal">8. Deep Teal</option>
+                <option value="theme-gray">9. Slate Gray</option>
+                <option value="theme-dark">10. Midnight Black</option>
+            </select>
+        </div>
+        <div class="theme-selector-item">
+            <span>WRITING DIRECTION</span>
+            <select id="notebookWritingMode" onchange="changeNotebookWritingMode(this.value === 'true')">
+                <option value="false">横書き (Horizontal)</option>
+                <option value="true">縦書き (Vertical)</option>
+            </select>
+        </div>
     </div>
 </div>
 
@@ -600,7 +632,7 @@
 
 <script>
     let notebooks = JSON.parse(localStorage.getItem('chronicle_notebooks')) || [
-        { id: 'nb_default', name: '日記1', theme: 'theme-classic', entries: [] }
+        { id: 'nb_default', name: '日記1', theme: 'theme-classic', isVertical: false, entries: [] }
     ];
     let currentNotebookId = localStorage.getItem('chronicle_current_nb_id') || 'nb_default';
     let editHistory = JSON.parse(localStorage.getItem('chronicle_edit_history')) || [];
@@ -626,6 +658,7 @@
         }
         notebooks.forEach(nb => {
             if (!nb.theme) nb.theme = 'theme-classic';
+            if (nb.isVertical === undefined) nb.isVertical = false; // 既存データに縦書きフラグを追加
             // 過去データ（単一画像）を複数画像配列に自動マイグレーション
             nb.entries.forEach(entry => {
                 if (entry.image && !entry.images) {
@@ -683,6 +716,39 @@
         if (editHistory.length > 5) editHistory = editHistory.slice(0, 5);
         saveAllData();
         renderHistory();
+    }
+
+    function updateNotebookHeader() {
+        const nb = getCurrentNotebook();
+        if (nb) {
+            document.getElementById('currentNotebookTitle').innerText = `📖 ${nb.name}`;
+            document.getElementById('notebookGlobalTheme').value = nb.theme || 'theme-classic';
+            document.getElementById('notebookWritingMode').value = String(!!nb.isVertical);
+            applyTheme(nb.theme);
+        }
+    }
+
+    function changeNotebookTheme(themeName) {
+        const nb = getCurrentNotebook();
+        if (nb) {
+            nb.theme = themeName;
+            saveAllData();
+            applyTheme(themeName);
+            renderTabs();
+            refreshSidebar();
+            renderCalendar();
+        }
+    }
+
+    function changeNotebookWritingMode(isVertical) {
+        const nb = getCurrentNotebook();
+        if (nb) {
+            nb.isVertical = isVertical;
+            saveAllData();
+            if (currentSelectId) {
+                viewDiary(currentSelectId);
+            }
+        }
     }
 
     function renderHistory() {
@@ -747,27 +813,6 @@
         else return (sizeInBytes / 1048576).toFixed(1) + " MB";
     }
 
-    function updateNotebookHeader() {
-        const nb = getCurrentNotebook();
-        if (nb) {
-            document.getElementById('currentNotebookTitle').innerText = `📖 ${nb.name}`;
-            document.getElementById('notebookGlobalTheme').value = nb.theme || 'theme-classic';
-            applyTheme(nb.theme);
-        }
-    }
-
-    function changeNotebookTheme(themeName) {
-        const nb = getCurrentNotebook();
-        if (nb) {
-            nb.theme = themeName;
-            saveAllData();
-            applyTheme(themeName);
-            renderTabs();
-            refreshSidebar();
-            renderCalendar();
-        }
-    }
-
     function renderTabs() {
         const container = document.getElementById('notebookTabs');
         container.innerHTML = '';
@@ -824,7 +869,7 @@
         if (!name || name.trim() === "") return;
 
         const newId = 'nb_' + Date.now();
-        notebooks.push({ id: newId, name: name.trim(), theme: 'theme-classic', entries: [] });
+        notebooks.push({ id: newId, name: name.trim(), theme: 'theme-classic', isVertical: false, entries: [] });
         currentNotebookId = newId;
         saveAllData();
         switchNotebook(newId);
@@ -979,6 +1024,7 @@
     function viewDiary(id) {
         currentSelectId = id;
         currentFormDate = null;
+        const nb = getCurrentNotebook();
         const currentEntries = getCurrentEntries();
         const entry = currentEntries.find(e => e.id === id);
         const mainPanel = document.getElementById('mainPanel');
@@ -1012,7 +1058,10 @@
         }
 
         const titleHtml = entry.title ? `<div class="diary-view-title">📌 ${entry.title}</div>` : '';
-        const weatherDisplay = entry.weather ? entry.weather : '<span style="color:#b0a99f; font-style:italic;"省略可</span>';
+        const weatherDisplay = entry.weather ? entry.weather : '<span style="color:#b0a99f; font-style:italic;">省略可</span>';
+
+        // 縦書きフラグに応じてクラスを付与
+        const textClass = (nb && nb.isVertical) ? 'diary-view-text vertical' : 'diary-view-text';
 
         mainPanel.innerHTML = `
             <h2 style="border-bottom: 3px solid var(--accent-color);">${labels['lbl-content']}</h2>
@@ -1022,7 +1071,7 @@
                 <div><strong>${labels['lbl-weather']}:</strong> ${weatherDisplay}</div>
             </div>
             ${galleryHtml}
-            <div class="diary-view-text">${entry.content}</div>
+            <div class="${textClass}">${entry.content}</div>
             
             <div class="action-buttons">
                 <button class="edit-entry-btn" onclick="showEditForm(${entry.id})">✏️ Edit Entry</button>
@@ -1360,7 +1409,7 @@
                     currentNotebookId = notebooks[0].id;
                     editHistory = importedData.editHistory || [];
                 } else if (importedData.entries) {
-                    notebooks = [{ id: 'nb_default', name: '復元された日記', theme: 'theme-classic', entries: importedData.entries }];
+                    notebooks = [{ id: 'nb_default', name: '復元された日記', theme: 'theme-classic', isVertical: false, entries: importedData.entries }];
                     currentNotebookId = 'nb_default';
                     editHistory = [];
                 } else {
@@ -1371,6 +1420,7 @@
                 // データ構造の再マイグレーション
                 notebooks.forEach(nb => {
                     if (!nb.theme) nb.theme = 'theme-classic';
+                    if (nb.isVertical === undefined) nb.isVertical = false;
                     nb.entries.forEach(entry => {
                         if (entry.image && !entry.images) {
                             entry.images = [{ id: Date.now() + Math.random(), data: entry.image }];
