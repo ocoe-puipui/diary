@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chronicle - 多機能絵日記帳 2026/07/04 21:12:11</title>
+    <title>Chronicle - 多機能絵日記帳 2026/07/06 21:12:11</title>
     <style>
         :root {
             --panel-bg: #ffffff;          /* 基本のパネル背景 */
@@ -352,7 +352,6 @@
             margin-bottom: 12px;
             font-size: 0.85rem;
             font-weight: 600;
-            text-transform: lowercase; /* 小文字統一のため念のためCSSでも指定 */
         }
         .backup-btn:hover { background-color: #faf9f6; }
         
@@ -369,7 +368,6 @@
             font-size: 0.85rem;
             text-align: center;
             cursor: pointer;
-            text-transform: lowercase; /* 小文字統一のため追加 */
         }
         .file-input-label:hover { background-color: #faf9f6; }
 
@@ -497,7 +495,24 @@
             align-items: center;
             margin-bottom: 15px;
         }
-        .calendar-title { font-size: 1.05rem; font-weight: 700; letter-spacing: 0.05em; }
+        /* 元号を上に表示するために縦並びの構成に変更 */
+        .calendar-title {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        .calendar-era {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        .calendar-western {
+            font-size: 1.05rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+        }
         .calendar-nav-btn {
             background: none;
             color: var(--text-main);
@@ -550,6 +565,29 @@
             color: white !important;
             border-color: var(--text-main) !important;
         }
+
+        /* 中央下「今日」ボタンの配置エリア */
+        .calendar-footer {
+            margin-top: 15px;
+            display: flex;
+            justify-content: center;
+        }
+        .calendar-today-btn {
+            background-color: transparent;
+            color: var(--text-main);
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            padding: 6px 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            width: auto;
+            transition: all 0.2s;
+        }
+        .calendar-today-btn:hover {
+            background-color: var(--text-main);
+            color: #ffffff;
+            border-color: var(--text-main);
+        }
     </style>
 </head>
 <body class="theme-classic" id="appBody">
@@ -561,10 +599,10 @@
 
 <!-- 選択中の日記帳名とテーマ一括変更用パネル -->
 <div class="notebook-header-panel">
-    <h1 class="current-notebook-title" id="currentNotebookTitle">📖 DIARY</h1>
+    <h1 class="current-notebook-title" id="currentNotebookTitle">👑 DIARY</h1>
     <div class="theme-selector-wrapper">
         <div class="theme-selector-item">
-            <span>COLOR THEME</span>
+            <span id="lblColorTheme">COLOR THEME</span>
             <select id="notebookGlobalTheme" onchange="changeNotebookTheme(this.value)">
                 <option value="theme-classic">1. Sienna Brown</option>
                 <option value="theme-green">2. Forest Green</option>
@@ -579,7 +617,7 @@
             </select>
         </div>
         <div class="theme-selector-item">
-            <span>WRITING DIRECTION</span>
+            <span id="lblWritingDirection">WRITING DIRECTION</span>
             <select id="notebookWritingMode" onchange="changeNotebookWritingMode(this.value === 'true')">
                 <option value="false">横書き Horizontal</option>
                 <option value="true">縦書き Vertical</option>
@@ -597,9 +635,9 @@
             <ul class="index-list" id="indexList" style="margin-bottom: 30px;"></ul>
             <h3 id="mgmtHeader" style="margin-top: 0;">Management</h3>
             <div>
-                <button class="backup-btn" onclick="exportData()">export (backup)</button>
+                <button class="backup-btn" id="exportBtn" onclick="exportData()">export (backup)</button>
                 <label class="file-input-label" id="importLabel">
-                    import (restore)
+                    <span id="importBtnText">import (restore)</span>
                     <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(this)">
                 </label>
             </div>
@@ -618,10 +656,18 @@
             <h3 id="calendarHeader" style="margin-top: 0;">Calendar</h3>
             <div class="calendar-header">
                 <button class="calendar-nav-btn" onclick="moveCalendar(-1)">◀</button>
-                <div class="calendar-title" id="calendarTitle">2026.07</div>
+                <!-- 元号と西暦・月を分離して上下に配置可能にする構造 -->
+                <div class="calendar-title" id="calendarTitle">
+                    <span class="calendar-era" id="calendarEra"></span>
+                    <span class="calendar-western" id="calendarWestern">2026.07</span>
+                </div>
                 <button class="calendar-nav-btn" onclick="moveCalendar(1)">▶</button>
             </div>
             <div class="calendar-grid" id="calendarGrid"></div>
+            <!-- 「今日」ボタン用コンテナを中央下に配置 -->
+            <div class="calendar-footer">
+                <button class="calendar-today-btn" id="todayBtn" onclick="jumpToToday()">今日</button>
+            </div>
         </div>
 
         <!-- 横断的な最近の編集履歴 -->
@@ -649,13 +695,13 @@
             labels = {
                 'lbl-date': '日付',
                 'lbl-title': 'タイトル',
-                'lbl-weather': '天気',
-                'lbl-image': '写真',
+                'lbl-weather': '備考',
+                'lbl-image': '画像',
                 'lbl-content': '本文',
                 'btn-write': '日記を書く',
                 'hd-index': '目次',
                 'hd-mgmt': '管理',
-                'hd-calendar': 'カレンダー',
+                'hd-calendar': '暦',
                 'hd-activity': '最近の履歴',
                 'text-no-entries': 'まだ日記がありません。',
                 'text-no-activity': '最近の履歴はありません。',
@@ -670,16 +716,24 @@
                 'btn-save-edit': '変更を保存する',
                 'btn-cancel': 'キャンセル',
                 'text-loading-form': '⏳ フォームの準備中です。少々お待ちください。',
-                'text-loading-edit': '⏳ 日記データを読み込んでいます。少々お待ちください。'
+                'text-loading-edit': '⏳ 日記データを読み込んでいます。少々お待ちください。',
+                // 追加項目
+                'lbl-color-theme': '配色テーマ',
+                'lbl-writing-direction': '文字方向',
+                'btn-export': 'データを書き出す',
+                'btn-import': 'データを読み込む',
+                'btn-edit-entry': '✏️ 日記を編集する',
+                'btn-delete': '🗑️ 削除する',
+                'btn-today': '今日'
             };
         } else {
             // 英語UI（横書き時）
             labels = {
                 'lbl-date': 'Date',
                 'lbl-title': 'Title',
-                'lbl-weather': 'Weather',
+                'lbl-weather': 'Note',
                 'lbl-image': 'Pictures',
-                'lbl-content': 'Note',
+                'lbl-content': 'Diary',
                 'btn-write': 'Write a Diary',
                 'hd-index': 'Index',
                 'hd-mgmt': 'Management',
@@ -698,7 +752,15 @@
                 'btn-save-edit': 'Save Changes',
                 'btn-cancel': 'Cancel',
                 'text-loading-form': '⏳ Loading... Please wait while preparing the form.',
-                'text-loading-edit': '⏳ Loading... Please wait while loading the entry details.'
+                'text-loading-edit': '⏳ Loading... Please wait while loading the entry details.',
+                // 追加項目
+                'lbl-color-theme': 'THEME',
+                'lbl-writing-direction': 'DIRECTION',
+                'btn-export': 'export',
+                'btn-import': 'import',
+                'btn-edit-entry': '✏️ Edit Entry',
+                'btn-delete': '🗑️ Delete',
+                'btn-today': 'Today'
             };
         }
 
@@ -708,12 +770,25 @@
         const mgmtHeader = document.getElementById('mgmtHeader');
         const calendarHeader = document.getElementById('calendarHeader');
         const activityHeader = document.getElementById('activityHeader');
+        
+        // 追加された固定メニュー要素の書き換え
+        const lblColorTheme = document.getElementById('lblColorTheme');
+        const lblWritingDirection = document.getElementById('lblWritingDirection');
+        const exportBtn = document.getElementById('exportBtn');
+        const importBtnText = document.getElementById('importBtnText');
+        const todayBtn = document.getElementById('todayBtn');
 
         if (newPostBtn) newPostBtn.innerText = labels['btn-write'];
         if (indexHeader) indexHeader.innerText = labels['hd-index'];
         if (mgmtHeader) mgmtHeader.innerText = labels['hd-mgmt'];
         if (calendarHeader) calendarHeader.innerText = labels['hd-calendar'];
         if (activityHeader) activityHeader.innerText = labels['hd-activity'];
+
+        if (lblColorTheme) lblColorTheme.innerText = labels['lbl-color-theme'];
+        if (lblWritingDirection) lblWritingDirection.innerText = labels['lbl-writing-direction'];
+        if (exportBtn) exportBtn.innerText = labels['btn-export'];
+        if (importBtnText) importBtnText.innerText = labels['btn-import'];
+        if (todayBtn) todayBtn.innerText = labels['btn-today'];
     }
     
     let currentSelectId = null;
@@ -989,11 +1064,19 @@
         }
     }
 
+    // 元号を自動判定して付与する日付フォーマッタ
     function formatJapaneseDate(dateStr) {
         if (!dateStr) return "";
         const parts = dateStr.split('-');
         if (parts.length === 3) {
-            return `${parts[0]}/${parts[1]}/${parts[2]}/`;
+            const dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+            
+            // ブラウザ標準機能で正確な元号を取得
+            const formatter = new Intl.DateTimeFormat('ja-JP-u-ca-japanese', { year: 'numeric' });
+            const eraStr = formatter.format(dateObj);
+            
+            // 日記日付の左側に元号を追加して返却
+            return `${eraStr} ${parts[0]}/${parts[1]}/${parts[2]}/`;
         }
         return dateStr;
     }
@@ -1035,13 +1118,21 @@
     }
 
     function renderCalendar() {
-        const title = document.getElementById('calendarTitle');
+        const eraSpan = document.getElementById('calendarEra');
+        const westernSpan = document.getElementById('calendarWestern');
         const grid = document.getElementById('calendarGrid');
         grid.innerHTML = '';
 
-        title.innerText = `${calendarYear}.${String(calendarMonth + 1).padStart(2, '0')}`;
+        // カレンダー表示月（1日時点）の元号を自動取得して西暦の左側に追加
+        const dateObj = new Date(calendarYear, calendarMonth, 1);
+        const formatter = new Intl.DateTimeFormat('ja-JP-u-ca-japanese', { year: 'numeric' });
+        const eraStr = formatter.format(dateObj);
 
-        const days = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+        // 元号と西暦を分けて流し込む（CSSで元号を上に配置）
+        eraSpan.innerText = eraStr;
+        westernSpan.innerText = `${calendarYear}.${String(calendarMonth + 1).padStart(2, '0')}`;
+
+        const days = ['日', '月', '火', '水', '木', '金', '土'];
         days.forEach(d => {
             const label = document.createElement('div');
             label.className = 'calendar-day-label';
@@ -1105,6 +1196,23 @@
         renderCalendar();
     }
 
+    // 「今日」ボタンを押したときの処理
+    function jumpToToday() {
+        const today = new Date();
+        calendarYear = today.getFullYear();
+        calendarMonth = today.getMonth();
+        
+        const dateStr = `${calendarYear}-${String(calendarMonth + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+        const currentEntries = getCurrentEntries();
+        const foundEntry = currentEntries.find(e => e.date === dateStr);
+        
+        if (foundEntry) {
+            viewDiary(foundEntry.id);
+        } else {
+            showNewForm(dateStr);
+        }
+    }
+
     function viewDiary(id) {
         currentSelectId = id;
         currentFormDate = null;
@@ -1153,15 +1261,15 @@
             <h2 style="border-bottom: 3px solid var(--accent-color);">${labels['lbl-content']}</h2>
             ${titleHtml}
             <div class="diary-view-header">
-                <div>📅 <strong>${labels['lbl-date']}:</strong> ${formatJapaneseDate(entry.date)}</div>
+                <div>🗓️ <strong>${labels['lbl-date']}:</strong> ${formatJapaneseDate(entry.date)}</div>
                 <div><strong>${labels['lbl-weather']}:</strong> ${weatherDisplay}</div>
             </div>
             ${galleryHtml}
             <div class="${textClass}">${entry.content}</div>
             
             <div class="action-buttons">
-                <button class="edit-entry-btn" onclick="showEditForm(${entry.id})">✏️ Edit Entry</button>
-                <button class="delete-btn" onclick="deleteEntry(${entry.id})">🗑️ Delete</button>
+                <button class="edit-entry-btn" onclick="showEditForm(${entry.id})">${labels['btn-edit-entry']}</button>
+                <button class="delete-btn" onclick="deleteEntry(${entry.id})">${labels['btn-delete']}</button>
             </div>
         `;
     }
