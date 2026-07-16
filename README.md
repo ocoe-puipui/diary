@@ -1,8 +1,7 @@
 # 📖 Chronicle - 多機能絵日記帳
 
 自分の日々の思い出を素敵に記録できる、ブラウザベースの多機能絵日記アプリケーション。
-
-**🌐 Safari対応ハイブリッド版** - IndexedDB と localStorage のハイブリッド管理システムで、どのブラウザでも安定して動作します。
+https://ocoe-puipui.github.io/diary/
 
 ---
 
