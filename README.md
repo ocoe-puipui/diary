@@ -1,4 +1,4 @@
-# 📖 Chronicle - 多機能絵日記帳
+# 📖 ブログ
 
 自分の日々の思い出を素敵に記録できる、ブラウザベースの多機能絵日記アプリケーション。
 https://ocoe-puipui.github.io/diary/
@@ -82,16 +82,13 @@ https://ocoe-puipui.github.io/diary/
 - **CSS3** - Flexbox・Grid レイアウト、カスタムプロパティ
 - **Vanilla JavaScript** - フレームワーク依存なし
 
-### ストレージシステム
+### ストレージ
 
-#### IndexedDB モード（推奨）
-- より大容量のデータ保存に対応
+#### IndexedDB 
 - 構造化データの効率的な管理
-- モダンブラウザ・Safari で利用可能
 
-#### localStorage フォールバック
+#### localStorage
 - IndexedDB が利用不可な環境に自動対応
-- 確実なローカルストレージ機能を提供
 
 ### データ構造
 
