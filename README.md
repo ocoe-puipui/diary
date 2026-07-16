@@ -73,7 +73,7 @@ https://ocoe-puipui.github.io/diary/
 ## 💻 技術仕様
 
 ### フロントエンド技術
-- **HTML5** - セマンティックマークアップ
+- **HTML5** - 
 - **CSS3** - Flexbox・Grid レイアウト、カスタムプロパティ
 - **Vanilla JavaScript** - フレームワーク依存なし
 
