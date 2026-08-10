@@ -423,6 +423,35 @@
             font-style: italic;
         }
 
+        .public-toggle-btn {
+            width: auto;
+            padding: 2px 6px;
+            font-size: 0.85rem;
+            line-height: 1;
+            background-color: transparent;
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            color: #b0a99f;
+            filter: grayscale(100%);
+            opacity: 0.6;
+            cursor: pointer;
+        }
+        .public-toggle-btn.is-public {
+            border-color: var(--accent-color);
+            filter: none;
+            opacity: 1;
+        }
+        .public-toggle-btn:hover { opacity: 1; }
+
+        .notebook-tab.public-tab {
+            background-color: #f5f3ef;
+        }
+        .notebook-tab.public-tab.active {
+            background-color: #fff;
+            box-shadow: inset 0 -4px 0 var(--accent-color);
+            font-weight: 800;
+        }
+
         .diary-view-title {
             font-size: 1.3rem;
             font-weight: 700;
@@ -623,10 +652,11 @@
             <h3 id="mgmtHeader" style="margin-top: 0;">Management</h3>
             <div>
                 <button class="backup-btn" id="exportBtn" onclick="exportData()">export (backup)</button>
-                <label class="file-input-label" id="importLabel">
+                <label class="file-input-label" id="importLabel" style="margin-bottom:12px;">
                     <span id="importBtnText">import (restore)</span>
                     <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(this)">
                 </label>
+                <button class="backup-btn" id="exportPublicBtn" onclick="exportPublicData()">export public entries</button>
             </div>
         </div>
     </div>
@@ -757,6 +787,10 @@
     let calendarYear = new Date().getFullYear();
     let calendarMonth = new Date().getMonth();
 
+    // --- 公開日記(public entries)関連の状態 ---
+    let publicEntries = [];
+    let isPublicMode = false;
+
     window.onload = async function() {
         await initDB();
         
@@ -790,8 +824,20 @@
             nb.entries.forEach(entry => {
                 if (!entry.images) entry.images = [];
                 if (entry.weather === undefined) entry.weather = "";
+                if (entry.isPublic === undefined) entry.isPublic = false;
             });
         });
+
+        // 公開日記データ(public_entries.json)の読み込み。存在しない/読み込み失敗時は空扱い。
+        try {
+            const pubRes = await fetch('public_entries.json', { cache: 'no-store' });
+            if (pubRes.ok) {
+                const pubData = await pubRes.json();
+                publicEntries = pubData.entries || [];
+            }
+        } catch (err) {
+            publicEntries = [];
+        }
 
         const nb = getCurrentNotebook();
         updateLabels(nb ? nb.isVertical : false);
@@ -845,7 +891,8 @@
                 'text-content-placeholder': 'ここに日記の内容を入力してください', 'btn-save-new': '日記を保存する', 'btn-save-edit': '変更を保存する',
                 'btn-cancel': 'キャンセル', 'text-loading-form': '⏳ フォームの準備中です。少々お待ちください。', 'text-loading-edit': '⏳ 日記データを読み込んでいます。少々お待ちください。',
                 'lbl-color-theme': '配色テーマ', 'lbl-writing-direction': '文字方向', 'btn-export': 'データを書き出す', 'btn-import': 'データを読み込む',
-                'btn-edit-entry': '✏️ 日記を編集する', 'btn-delete': '🗑️ 削除する', 'btn-today': '今日'
+                'btn-edit-entry': '✏️ 日記を編集する', 'btn-delete': '🗑️ 削除する', 'btn-today': '今日',
+                'lbl-public': 'この日記を公開する', 'btn-export-public': '公開用データを書き出す'
             };
         } else {
             labels = {
@@ -857,7 +904,8 @@
                 'text-content-placeholder': 'Describe your day...', 'btn-save-new': 'Save to Chronicle', 'btn-save-edit': 'Save Changes',
                 'btn-cancel': 'Cancel', 'text-loading-form': '⏳ Loading... Please wait.', 'text-loading-edit': '⏳ Loading... Please wait.',
                 'lbl-color-theme': 'THEME', 'lbl-writing-direction': 'DIRECTION', 'btn-export': 'export', 'btn-import': 'import',
-                'btn-edit-entry': '✏️ Edit Entry', 'btn-delete': '🗑️ Delete', 'btn-today': 'Today'
+                'btn-edit-entry': '✏️ Edit Entry', 'btn-delete': '🗑️ Delete', 'btn-today': 'Today',
+                'lbl-public': 'Publish this entry', 'btn-export-public': 'export public entries'
             };
         }
 
@@ -870,6 +918,7 @@
         document.getElementById('lblWritingDirection').innerText = labels['lbl-writing-direction'];
         document.getElementById('exportBtn').innerText = labels['btn-export'];
         document.getElementById('importBtnText').innerText = labels['btn-import'];
+        document.getElementById('exportPublicBtn').innerText = labels['btn-export-public'];
         document.getElementById('todayBtn').innerText = labels['btn-today'];
     }
 
@@ -965,12 +1014,12 @@
         container.innerHTML = '';
         notebooks.forEach(nb => {
             const btn = document.createElement('button');
-            btn.className = `notebook-tab ${nb.id === currentNotebookId ? 'active' : ''}`;
-            
+            btn.className = `notebook-tab ${(!isPublicMode && nb.id === currentNotebookId) ? 'active' : ''}`;
+
             const textSpan = document.createElement('span');
             textSpan.className = 'notebook-tab-text';
             textSpan.innerText = nb.name;
-            textSpan.onclick = () => switchNotebook(nb.id);
+            textSpan.onclick = () => { isPublicMode = false; switchNotebook(nb.id); };
             btn.appendChild(textSpan);
 
             const renameBtn = document.createElement('span');
@@ -986,6 +1035,47 @@
         addBtn.innerText = '＋ 日記を追加';
         addBtn.onclick = addNotebook;
         container.appendChild(addBtn);
+
+        const publicBtn = document.createElement('button');
+        publicBtn.className = `notebook-tab public-tab ${isPublicMode ? 'active' : ''}`;
+        publicBtn.innerText = `🌐 公開日記 (${publicEntries.length})`;
+        publicBtn.onclick = renderPublicView;
+        container.appendChild(publicBtn);
+    }
+
+    function renderPublicView() {
+        isPublicMode = true;
+        currentSelectId = null;
+        renderTabs();
+
+        let html = `<h2>🌐 公開日記</h2>`;
+        if (!publicEntries || publicEntries.length === 0) {
+            html += `<div style="text-align:center; padding:50px; font-weight:600; color:var(--text-muted);">公開されている日記はまだありません。</div>`;
+        } else {
+            publicEntries.forEach(entry => {
+                let galleryHtml = '';
+                if (entry.images && entry.images.length > 0) {
+                    galleryHtml = '<div class="diary-view-gallery">';
+                    entry.images.forEach(img => {
+                        const src = typeof img === 'string' ? img : img.data;
+                        galleryHtml += `<div class="diary-view-image-wrapper"><img src="${src}"></div>`;
+                    });
+                    galleryHtml += '</div>';
+                }
+                html += `
+                    <div class="notebook-panel" style="margin-bottom:20px;">
+                        ${entry.title ? `<div class="diary-view-title">📌 ${entry.title}</div>` : ''}
+                        <div class="diary-view-header">
+                            <div>🗓️ ${formatJapaneseDate(entry.date)}</div>
+                            <div>${entry.weather || ''}</div>
+                        </div>
+                        ${galleryHtml}
+                        <div class="diary-view-text">${entry.content}</div>
+                    </div>
+                `;
+            });
+        }
+        document.getElementById('mainPanel').innerHTML = html;
     }
 
     function switchNotebook(id) {
@@ -1070,12 +1160,32 @@
             const li = document.createElement('li');
             li.className = `index-item ${entry.id === currentSelectId ? 'active' : ''}`;
             li.innerHTML = `
-                <div class="index-row-top"><span class="index-page-num">P.${currentEntries.length - idx}</span><span>${formatSlashDate(entry.date)}</span></div>
+                <div class="index-row-top">
+                    <span class="index-page-num">P.${currentEntries.length - idx}</span>
+                    <span style="display:flex; align-items:center; gap:8px;">
+                        <button type="button" class="public-toggle-btn ${entry.isPublic ? 'is-public' : ''}" title="${entry.isPublic ? '公開中(クリックで非公開に)' : '非公開(クリックで公開)'}" onclick="toggleEntryPublic(event, ${entry.id})">🌐</button>
+                        <span>${formatSlashDate(entry.date)}</span>
+                    </span>
+                </div>
                 <div class="index-row-bottom ${!entry.title ? 'empty-title' : ''}" title="${entry.title || labels['text-empty-title']}">${entry.title || labels['text-empty-title']}</div>
             `;
             li.onclick = () => viewDiary(entry.id);
             indexList.appendChild(li);
         });
+    }
+
+    function toggleEntryPublic(event, id) {
+        event.stopPropagation();
+        const nb = getCurrentNotebook(); if (!nb) return;
+        const entry = nb.entries.find(e => e.id === id); if (!entry) return;
+        entry.isPublic = !entry.isPublic;
+        saveAllData();
+        refreshSidebar();
+        // 現在編集フォームを開いている対象と同じ場合はチェックボックスも同期する
+        if (currentSelectId === id) {
+            const checkbox = document.getElementById('diaryIsPublic');
+            if (checkbox) checkbox.checked = entry.isPublic;
+        }
     }
 
     function renderCalendar() {
@@ -1140,12 +1250,14 @@
     }
 
     function viewDiary(id) {
+        isPublicMode = false;
         currentSelectId = id; currentFormDate = null;
         const nb = getCurrentNotebook();
         const entry = getCurrentEntries().find(e => e.id === id);
         if (!entry) { showNewForm(); return; }
 
         updateLabels(nb ? nb.isVertical : false);
+        renderTabs();
         refreshSidebar();
         syncCalendarMonth(entry.date);
 
@@ -1190,10 +1302,11 @@
     }
 
     function showNewForm(targetDateStr = null) {
+        isPublicMode = false;
         currentSelectId = null; tempImagesArray = [];
         const finalDateStr = targetDateStr || new Date().toISOString().substring(0, 10);
         currentFormDate = finalDateStr;
-        refreshSidebar(); syncCalendarMonth(finalDateStr);
+        renderTabs(); refreshSidebar(); syncCalendarMonth(finalDateStr);
 
         document.getElementById('mainPanel').innerHTML = `
             <h2>New Entry</h2>
@@ -1208,16 +1321,24 @@
                     <div class="form-images-grid" id="formImagesGrid"></div>
                 </div>
                 <div class="form-group"><span class="editable-label">${labels['lbl-content']}</span><textarea id="diaryContent" placeholder="${labels['text-content-placeholder']}" required></textarea></div>
+                <div class="form-group">
+                    <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+                        <input type="checkbox" id="diaryIsPublic" style="width:auto;">
+                        <span class="editable-label" style="margin-bottom:0;">${labels['lbl-public']}</span>
+                    </label>
+                </div>
                 <button type="submit">${labels['btn-save-new']}</button>
             </form>
         `;
     }
 
     function showEditForm(id) {
+        isPublicMode = false;
         const entry = getCurrentEntries().find(e => e.id === id);
         if (!entry) return;
         tempImagesArray = entry.images ? [...entry.images] : [];
         currentFormDate = entry.date;
+        renderTabs();
 
         document.getElementById('mainPanel').innerHTML = `
             <h2>Edit Entry</h2>
@@ -1232,6 +1353,12 @@
                     <div class="form-images-grid" id="formImagesGrid"></div>
                 </div>
                 <div class="form-group"><span class="editable-label">${labels['lbl-content']}</span><textarea id="diaryContent" required>${entry.content}</textarea></div>
+                <div class="form-group">
+                    <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+                        <input type="checkbox" id="diaryIsPublic" ${entry.isPublic ? 'checked' : ''} style="width:auto;">
+                        <span class="editable-label" style="margin-bottom:0;">${labels['lbl-public']}</span>
+                    </label>
+                </div>
                 <div class="action-buttons" style="border:none; padding:0; margin:0;">
                     <button type="submit">${labels['btn-save-edit']}</button>
                     <button type="button" class="delete-btn" style="padding:12px 20px;" onclick="viewDiary(${id})">${labels['btn-cancel']}</button>
@@ -1268,7 +1395,7 @@
 
     function saveNewDiary(e) {
         e.preventDefault(); const nb = getCurrentNotebook(); if (!nb) return;
-        const entry = { id: Date.now(), date: document.getElementById('diaryDate').value, title: document.getElementById('diaryTitle').value.trim(), weather: document.getElementById('diaryWeatherCustom').value.trim(), images: tempImagesArray, content: document.getElementById('diaryContent').value };
+        const entry = { id: Date.now(), date: document.getElementById('diaryDate').value, title: document.getElementById('diaryTitle').value.trim(), weather: document.getElementById('diaryWeatherCustom').value.trim(), images: tempImagesArray, content: document.getElementById('diaryContent').value, isPublic: document.getElementById('diaryIsPublic').checked };
         nb.entries.unshift(entry); nb.entries.sort((a,b) => new Date(b.date) - new Date(a.date));
         pushToHistory(nb.id, nb.name, entry.id, entry.date, entry.title); viewDiary(entry.id);
     }
@@ -1276,7 +1403,7 @@
     function saveEditDiary(e, id) {
         e.preventDefault(); const nb = getCurrentNotebook();
         const entry = nb.entries.find(e => e.id === id); if (!entry) return;
-        entry.date = document.getElementById('diaryDate').value; entry.title = document.getElementById('diaryTitle').value.trim(); entry.weather = document.getElementById('diaryWeatherCustom').value.trim(); entry.content = document.getElementById('diaryContent').value; entry.images = tempImagesArray;
+        entry.date = document.getElementById('diaryDate').value; entry.title = document.getElementById('diaryTitle').value.trim(); entry.weather = document.getElementById('diaryWeatherCustom').value.trim(); entry.content = document.getElementById('diaryContent').value; entry.images = tempImagesArray; entry.isPublic = document.getElementById('diaryIsPublic').checked;
         nb.entries.sort((a,b) => new Date(b.date) - new Date(a.date));
         pushToHistory(nb.id, nb.name, entry.id, entry.date, entry.title); viewDiary(id);
     }
@@ -1294,6 +1421,32 @@
     function exportData() {
         const blob = new Blob([JSON.stringify({ version: "3.0", notebooks: notebooks, editHistory: editHistory }, null, 2)], { type: "application/json" });
         const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `chronicle_db_backup_${new Date().toISOString().substring(0, 10)}.json`;
+        a.click();
+    }
+
+    // 公開マークが付いたエントリだけを抽出し、公開ページ用のJSONとして書き出す。
+    // 書き出したファイルは手動で public_entries.json としてリポジトリに配置・コミットする運用。
+    function exportPublicData() {
+        const pubList = [];
+        notebooks.forEach(nb => {
+            nb.entries.forEach(entry => {
+                if (entry.isPublic) {
+                    pubList.push({
+                        id: 'pub_' + entry.id,
+                        date: entry.date,
+                        title: entry.title || '',
+                        content: entry.content || '',
+                        weather: entry.weather || '',
+                        images: (entry.images || []).map(img => (typeof img === 'string' ? img : img.data))
+                    });
+                }
+            });
+        });
+        pubList.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        const payload = { version: "1.0", updatedAt: new Date().toISOString().substring(0, 10), entries: pubList };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+        const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `public_entries.json`;
         a.click();
     }
 
