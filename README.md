@@ -1,4 +1,4 @@
-# Chronicle Diary(ブログ)
+# 日記アプリ
 
 ブラウザベースの日記アプリです。データはすべてブラウザ内(IndexedDB/localStorage)に保存され、サーバーには一切送信されません。
 
