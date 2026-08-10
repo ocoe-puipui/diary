@@ -176,6 +176,9 @@
                 position: sticky;
                 top: 20px;
             }
+            .container.demo-mode {
+                grid-template-columns: 290px 1fr;
+            }
         }
 
         .notebook-panel {
@@ -649,13 +652,13 @@
         <div class="notebook-panel">
             <button class="new-post-btn" id="newPostBtn" onclick="showNewForm()">Write a Diary</button>
             <h3 id="indexHeader" style="margin-top: 20px;">Index</h3>
-            <div class="bulk-public-actions">
+            <div class="bulk-public-actions" id="bulkPublicActions">
                 <button class="backup-btn" id="bulkPublishBtn" onclick="bulkSetPublic(true)">すべて公開にする</button>
                 <button class="backup-btn" id="bulkUnpublishBtn" onclick="bulkSetPublic(false)">すべて非公開にする</button>
             </div>
             <ul class="index-list" id="indexList" style="margin-bottom: 30px;"></ul>
             <h3 id="mgmtHeader" style="margin-top: 0;">Management</h3>
-            <div>
+            <div id="mgmtActions">
                 <button class="backup-btn" id="exportBtn" onclick="exportData()">export (backup)</button>
                 <label class="file-input-label" id="importLabel" style="margin-bottom:12px;">
                     <span id="importBtnText">import (restore)</span>
@@ -670,7 +673,7 @@
         <div style="text-align:center; padding:50px; font-weight:600; color:var(--text-muted);">システム準備中...</div>
     </div>
 
-    <div class="sidebar-right">
+    <div class="sidebar-right" id="sidebarRightPanel">
         <div class="notebook-panel">
             <h3 id="calendarHeader" style="margin-top: 0;">Calendar</h3>
             <div class="calendar-header">
@@ -792,7 +795,33 @@
     let calendarYear = new Date().getFullYear();
     let calendarMonth = new Date().getMonth();
 
+    // ============================================================
+    // ⚠️ 【このコードをフォーク/ダウンロードして使う方へ】⚠️
+    // ============================================================
+    // 以下の LIVE_DEMO_HOSTNAME は、このアプリの作者(puipui)自身の
+    // 公開ページ(https://ocoe-puipui.github.io/diary/)専用の設定です。
+    // 一致した場合のみ、新規作成・編集・削除・公開切替などの機能を隠す
+    // 「閲覧専用デモモード」に切り替わります。
+    //
+    // ご自身の環境で使う場合は、この値は無関係(常にfalseになる)なので
+    // そのままでも動作はしますが、紛らわしいため以下のいずれかの対応を
+    // 強く推奨します。
+    //   1) 単純に削除する(このブロックと isLiveDemo の分岐処理ごと削除)
+    //   2) ご自身の公開ドメインに書き換える(例: 'yourname.github.io')
+    //      → ご自身のサイトでも同様に「公開部分は編集不可にしたい」場合はこちら
+    //
+    // このままにしておいても他人の環境情報が漏れるようなことはありません
+    // (単なる文字列比較です)が、「保護されているつもりが実は無効」という
+    // 誤解を避けるため、必ずご自身の用途に合わせて見直してください。
+    // ============================================================
+    const LIVE_DEMO_HOSTNAME = 'ocoe-puipui.github.io';
+    const isLiveDemo = (location.hostname === LIVE_DEMO_HOSTNAME);
+
     window.onload = async function() {
+        if (isLiveDemo) {
+            await initReadOnlyDemo();
+            return;
+        }
         await initDB();
         
         // 旧データ互換処理（localStorageからのサルベージ）
@@ -844,6 +873,79 @@
             showNewForm();
         }
     };
+
+    // 閲覧専用デモモードの初期化。編集系UIを全て隠し、public_entries.json の内容だけを表示する。
+    async function initReadOnlyDemo() {
+        document.querySelector('.container').classList.add('demo-mode');
+        document.querySelector('.notebook-tabs-container').style.display = 'none';
+        document.getElementById('sidebarRightPanel').style.display = 'none';
+        document.getElementById('newPostBtn').style.display = 'none';
+        document.getElementById('bulkPublicActions').style.display = 'none';
+        document.getElementById('mgmtHeader').style.display = 'none';
+        document.getElementById('mgmtActions').style.display = 'none';
+        document.getElementById('currentNotebookTitle').innerText = '📖 公開日記(閲覧専用)';
+        document.querySelector('.theme-selector-wrapper').style.display = 'none';
+        document.getElementById('indexHeader').innerText = 'Index';
+
+        let entries = [];
+        try {
+            const res = await fetch('public_entries.json', { cache: 'no-store' });
+            if (res.ok) {
+                const data = await res.json();
+                entries = data.entries || [];
+            }
+        } catch (err) {
+            entries = [];
+        }
+
+        const indexList = document.getElementById('indexList');
+        indexList.innerHTML = '';
+        if (entries.length === 0) {
+            indexList.innerHTML = `<li style="color:var(--text-muted);font-size:0.9rem;font-weight:600;padding:10px 0;text-align:center;">公開されている日記はまだありません。</li>`;
+            document.getElementById('mainPanel').innerHTML = `<div style="text-align:center; padding:50px; font-weight:600; color:var(--text-muted);">公開されている日記はまだありません。</div>`;
+            return;
+        }
+
+        entries.forEach((entry, idx) => {
+            const li = document.createElement('li');
+            li.className = 'index-item';
+            li.innerHTML = `
+                <div class="index-row-top"><span class="index-page-num">P.${entries.length - idx}</span><span>${formatSlashDate(entry.date)}</span></div>
+                <div class="index-row-bottom ${!entry.title ? 'empty-title' : ''}" title="${entry.title || '(no title)'}">${entry.title || '(no title)'}</div>
+            `;
+            li.onclick = () => {
+                document.querySelectorAll('#indexList .index-item').forEach(el => el.classList.remove('active'));
+                li.classList.add('active');
+                renderReadOnlyEntry(entry);
+            };
+            if (idx === 0) li.classList.add('active');
+            indexList.appendChild(li);
+        });
+
+        renderReadOnlyEntry(entries[0]);
+    }
+
+    function renderReadOnlyEntry(entry) {
+        let galleryHtml = '';
+        if (entry.images && entry.images.length > 0) {
+            galleryHtml = '<div class="diary-view-gallery">';
+            entry.images.forEach(img => {
+                const src = typeof img === 'string' ? img : img.data;
+                galleryHtml += `<div class="diary-view-image-wrapper"><img src="${src}"></div>`;
+            });
+            galleryHtml += '</div>';
+        }
+        document.getElementById('mainPanel').innerHTML = `
+            <h2>NOTE</h2>
+            ${entry.title ? `<div class="diary-view-title">📌 ${entry.title}</div>` : ''}
+            <div class="diary-view-header">
+                <div>🗓️ ${formatJapaneseDate(entry.date)}</div>
+                <div>${entry.weather || ''}</div>
+            </div>
+            ${galleryHtml}
+            <div class="diary-view-text">${entry.content}</div>
+        `;
+    }
 
     function getCurrentNotebook() {
         return notebooks.find(n => n.id === currentNotebookId);
