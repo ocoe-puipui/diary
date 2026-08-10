@@ -443,13 +443,14 @@
         }
         .public-toggle-btn:hover { opacity: 1; }
 
-        .notebook-tab.public-tab {
-            background-color: #f5f3ef;
+        .bulk-public-actions {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
         }
-        .notebook-tab.public-tab.active {
-            background-color: #fff;
-            box-shadow: inset 0 -4px 0 var(--accent-color);
-            font-weight: 800;
+        .bulk-public-actions button {
+            font-size: 0.75rem;
+            padding: 8px 10px;
         }
 
         .diary-view-title {
@@ -648,6 +649,10 @@
         <div class="notebook-panel">
             <button class="new-post-btn" id="newPostBtn" onclick="showNewForm()">Write a Diary</button>
             <h3 id="indexHeader" style="margin-top: 20px;">Index</h3>
+            <div class="bulk-public-actions">
+                <button class="backup-btn" id="bulkPublishBtn" onclick="bulkSetPublic(true)">すべて公開にする</button>
+                <button class="backup-btn" id="bulkUnpublishBtn" onclick="bulkSetPublic(false)">すべて非公開にする</button>
+            </div>
             <ul class="index-list" id="indexList" style="margin-bottom: 30px;"></ul>
             <h3 id="mgmtHeader" style="margin-top: 0;">Management</h3>
             <div>
@@ -787,10 +792,6 @@
     let calendarYear = new Date().getFullYear();
     let calendarMonth = new Date().getMonth();
 
-    // --- 公開日記(public entries)関連の状態 ---
-    let publicEntries = [];
-    let isPublicMode = false;
-
     window.onload = async function() {
         await initDB();
         
@@ -827,17 +828,6 @@
                 if (entry.isPublic === undefined) entry.isPublic = false;
             });
         });
-
-        // 公開日記データ(public_entries.json)の読み込み。存在しない/読み込み失敗時は空扱い。
-        try {
-            const pubRes = await fetch('public_entries.json', { cache: 'no-store' });
-            if (pubRes.ok) {
-                const pubData = await pubRes.json();
-                publicEntries = pubData.entries || [];
-            }
-        } catch (err) {
-            publicEntries = [];
-        }
 
         const nb = getCurrentNotebook();
         updateLabels(nb ? nb.isVertical : false);
@@ -1014,12 +1004,12 @@
         container.innerHTML = '';
         notebooks.forEach(nb => {
             const btn = document.createElement('button');
-            btn.className = `notebook-tab ${(!isPublicMode && nb.id === currentNotebookId) ? 'active' : ''}`;
+            btn.className = `notebook-tab ${nb.id === currentNotebookId ? 'active' : ''}`;
 
             const textSpan = document.createElement('span');
             textSpan.className = 'notebook-tab-text';
             textSpan.innerText = nb.name;
-            textSpan.onclick = () => { isPublicMode = false; switchNotebook(nb.id); };
+            textSpan.onclick = () => switchNotebook(nb.id);
             btn.appendChild(textSpan);
 
             const renameBtn = document.createElement('span');
@@ -1035,47 +1025,6 @@
         addBtn.innerText = '＋ 日記を追加';
         addBtn.onclick = addNotebook;
         container.appendChild(addBtn);
-
-        const publicBtn = document.createElement('button');
-        publicBtn.className = `notebook-tab public-tab ${isPublicMode ? 'active' : ''}`;
-        publicBtn.innerText = `🌐 公開日記 (${publicEntries.length})`;
-        publicBtn.onclick = renderPublicView;
-        container.appendChild(publicBtn);
-    }
-
-    function renderPublicView() {
-        isPublicMode = true;
-        currentSelectId = null;
-        renderTabs();
-
-        let html = `<h2>🌐 公開日記</h2>`;
-        if (!publicEntries || publicEntries.length === 0) {
-            html += `<div style="text-align:center; padding:50px; font-weight:600; color:var(--text-muted);">公開されている日記はまだありません。</div>`;
-        } else {
-            publicEntries.forEach(entry => {
-                let galleryHtml = '';
-                if (entry.images && entry.images.length > 0) {
-                    galleryHtml = '<div class="diary-view-gallery">';
-                    entry.images.forEach(img => {
-                        const src = typeof img === 'string' ? img : img.data;
-                        galleryHtml += `<div class="diary-view-image-wrapper"><img src="${src}"></div>`;
-                    });
-                    galleryHtml += '</div>';
-                }
-                html += `
-                    <div class="notebook-panel" style="margin-bottom:20px;">
-                        ${entry.title ? `<div class="diary-view-title">📌 ${entry.title}</div>` : ''}
-                        <div class="diary-view-header">
-                            <div>🗓️ ${formatJapaneseDate(entry.date)}</div>
-                            <div>${entry.weather || ''}</div>
-                        </div>
-                        ${galleryHtml}
-                        <div class="diary-view-text">${entry.content}</div>
-                    </div>
-                `;
-            });
-        }
-        document.getElementById('mainPanel').innerHTML = html;
     }
 
     function switchNotebook(id) {
@@ -1174,6 +1123,22 @@
         });
     }
 
+    // 現在開いているノート(タブ)内の全エントリを一括で公開/非公開に切り替える。
+    // 個別のエントリは、この一括操作の後でも🌐ボタンで個別にオン/オフし直せる。
+    function bulkSetPublic(makePublic) {
+        const nb = getCurrentNotebook(); if (!nb) return;
+        if (nb.entries.length === 0) return;
+        const msg = makePublic
+            ? `「${nb.name}」内の全${nb.entries.length}件を公開にします。よろしいですか？`
+            : `「${nb.name}」内の全${nb.entries.length}件を非公開にします。よろしいですか？`;
+        if (!confirm(msg)) return;
+        nb.entries.forEach(entry => { entry.isPublic = makePublic; });
+        saveAllData();
+        refreshSidebar();
+        const checkbox = document.getElementById('diaryIsPublic');
+        if (checkbox && currentSelectId) checkbox.checked = makePublic;
+    }
+
     function toggleEntryPublic(event, id) {
         event.stopPropagation();
         const nb = getCurrentNotebook(); if (!nb) return;
@@ -1250,7 +1215,6 @@
     }
 
     function viewDiary(id) {
-        isPublicMode = false;
         currentSelectId = id; currentFormDate = null;
         const nb = getCurrentNotebook();
         const entry = getCurrentEntries().find(e => e.id === id);
@@ -1302,11 +1266,10 @@
     }
 
     function showNewForm(targetDateStr = null) {
-        isPublicMode = false;
         currentSelectId = null; tempImagesArray = [];
         const finalDateStr = targetDateStr || new Date().toISOString().substring(0, 10);
         currentFormDate = finalDateStr;
-        renderTabs(); refreshSidebar(); syncCalendarMonth(finalDateStr);
+        refreshSidebar(); syncCalendarMonth(finalDateStr);
 
         document.getElementById('mainPanel').innerHTML = `
             <h2>New Entry</h2>
@@ -1333,12 +1296,10 @@
     }
 
     function showEditForm(id) {
-        isPublicMode = false;
         const entry = getCurrentEntries().find(e => e.id === id);
         if (!entry) return;
         tempImagesArray = entry.images ? [...entry.images] : [];
         currentFormDate = entry.date;
-        renderTabs();
 
         document.getElementById('mainPanel').innerHTML = `
             <h2>Edit Entry</h2>
