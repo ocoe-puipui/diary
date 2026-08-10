@@ -455,6 +455,27 @@
             padding: 10px 8px;
         }
 
+        .announcement-image-btn-row {
+            display: flex;
+            flex-wrap: nowrap;
+            justify-content: space-between;
+            gap: 8px;
+            width: 100%;
+        }
+        .announcement-image-btn-row .file-input-label {
+            flex: 1 1 0;
+            min-width: 0;
+            margin-bottom: 0;
+            font-size: 0.68rem;
+            padding: 10px 2px;
+        }
+        .announcement-image-btn-row .file-input-label span {
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
         .index-list, .history-list {
             list-style: none;
             padding: 0;
@@ -1081,10 +1102,9 @@
     async function initReadOnlyDemo() {
         document.getElementById('newPostBtn').style.display = 'none';
         document.getElementById('bulkPublicActions').style.display = 'none';
-        document.getElementById('mgmtHeader').style.display = 'none';
-        document.getElementById('mgmtActions').style.display = 'none';
+        document.querySelector('.settings-group').style.display = 'none';
         document.querySelector('.theme-selector-wrapper').style.display = 'none';
-        // 件数選択・ページ送りは編集画面のみの機能のため、公開ページ側では表示しない
+        // 件数選択(SHOW)は編集画面のみの機能のため、公開ページ側では表示しない(ページ送り自体は表示する)
         document.querySelector('.index-page-size-row').style.display = 'none';
         document.getElementById('indexHeader').innerText = 'Index';
         document.getElementById('activityHeader').innerText = 'Recent Activity';
@@ -1159,19 +1179,23 @@
     function switchDemoNotebook(id) {
         currentNotebookId = id;
         currentSelectId = null;
+        indexPageOffset = 0;
         const nb = getDemoNotebook();
         if (!nb) return;
         applyTheme(nb.theme);
         renderDemoTabs();
-        refreshDemoSidebar();
         renderDemoCalendar();
         renderDemoActivity();
         const entries = getDemoEntries();
-        if (entries.length > 0) {
-            viewDemoEntry(entries[0].id);
-        } else {
+        if (entries.length === 0) {
+            refreshDemoSidebar();
             document.getElementById('mainPanel').innerHTML = `<div style="text-align:center; padding:50px; font-weight:600; color:var(--text-muted);">このノートにはまだ公開されている日記はありません。</div>`;
             document.getElementById('mainPanelEntryNav').innerHTML = '';
+        } else if (mainViewMode === 'feed') {
+            refreshDemoSidebar();
+            renderDemoEntryFeed();
+        } else {
+            viewDemoEntry(entries[0].id);
         }
     }
 
@@ -1181,9 +1205,17 @@
         const entries = getDemoEntries();
         if (entries.length === 0) {
             indexList.innerHTML = `<li style="color:var(--text-muted);font-size:0.9rem;font-weight:600;padding:10px 0;text-align:center;">公開されている日記はまだありません。</li>`;
+            document.getElementById('indexPageNavTop').innerHTML = '';
             return;
         }
-        entries.forEach((entry, idx) => {
+
+        const totalPages = Math.max(1, Math.ceil(entries.length / indexPageSize));
+        if (indexPageOffset > totalPages - 1) indexPageOffset = totalPages - 1;
+        if (indexPageOffset < 0) indexPageOffset = 0;
+        const startIdx = indexPageOffset * indexPageSize;
+        const pageEntries = entries.slice(startIdx, startIdx + indexPageSize);
+
+        pageEntries.forEach(entry => {
             const li = document.createElement('li');
             li.className = `index-item ${entry.id === currentSelectId ? 'active' : ''}`;
             li.innerHTML = `
@@ -1193,6 +1225,56 @@
             li.onclick = () => viewDemoEntry(entry.id);
             indexList.appendChild(li);
         });
+
+        renderIndexPageNav(totalPages);
+    }
+
+    // 現在のページに含まれる複数エントリーを、新しいものから順にまとめて表示する(デモ用)
+    function renderDemoEntryFeed() {
+        const nb = getDemoNotebook();
+        const entries = getDemoEntries();
+        if (entries.length === 0) return;
+
+        const totalPages = Math.max(1, Math.ceil(entries.length / indexPageSize));
+        if (indexPageOffset > totalPages - 1) indexPageOffset = totalPages - 1;
+        if (indexPageOffset < 0) indexPageOffset = 0;
+        const startIdx = indexPageOffset * indexPageSize;
+        const pageEntries = entries.slice(startIdx, startIdx + indexPageSize);
+
+        const fontSizeClass = `fontsize-${(nb && nb.fontSize) || 'medium'}`;
+        let html = `<div class="entry-view-wrapper ${fontSizeClass}">`;
+        pageEntries.forEach(entry => {
+            let galleryHtml = '';
+            if (entry.images && entry.images.length > 0) {
+                galleryHtml = '<div class="diary-view-gallery">';
+                entry.images.forEach(img => {
+                    const src = typeof img === 'string' ? img : img.data;
+                    galleryHtml += `<div class="diary-view-image-wrapper"><img src="${src}"></div>`;
+                });
+                galleryHtml += '</div>';
+            }
+            html += `
+                <div class="feed-entry-block">
+                    ${entry.title ? `<div class="diary-view-title">${entry.title}</div>` : ''}
+                    <div class="diary-view-header ${nb && nb.isVertical ? 'vertical' : ''}">
+                        <div>🗓️ ${formatJapaneseDate(entry.date)}</div>
+                        ${entry.weather ? `<div>${entry.weather}</div>` : ''}
+                    </div>
+                    ${galleryHtml}
+                    <div class="diary-view-text ${nb && nb.isVertical ? 'vertical' : ''}">${entry.content}</div>
+                </div>
+            `;
+        });
+        html += `</div>`;
+        document.getElementById('mainPanel').innerHTML = html;
+
+        const statusHtml = `<span class="index-page-status">${indexPageOffset + 1} / ${totalPages}</span>`;
+        const navHtml = totalPages <= 1 ? '' : `
+            <button type="button" onclick="moveIndexPage(-1)" ${indexPageOffset <= 0 ? 'disabled' : ''} aria-label="previous">◀</button>
+            ${statusHtml}
+            <button type="button" onclick="moveIndexPage(1)" ${indexPageOffset >= totalPages - 1 ? 'disabled' : ''} aria-label="next">▶</button>
+        `;
+        document.getElementById('mainPanelEntryNav').innerHTML = navHtml;
     }
 
     function renderDemoCalendar() {
@@ -1667,8 +1749,13 @@
 
     function moveIndexPage(direction) {
         indexPageOffset += direction;
-        refreshSidebar();
-        if (mainViewMode === 'feed') renderEntryFeed();
+        if (isLiveDemo) {
+            refreshDemoSidebar();
+            if (mainViewMode === 'feed') renderDemoEntryFeed();
+        } else {
+            refreshSidebar();
+            if (mainViewMode === 'feed') renderEntryFeed();
+        }
     }
 
     function changeIndexPageSize(size) {
@@ -1991,14 +2078,26 @@
         document.getElementById('mainPanelEntryNav').innerHTML = '';
         document.getElementById('mainPanel').innerHTML = `
             <h2>お知らせ設定</h2>
-            <p style="color:var(--text-muted); font-size:0.9rem; margin-top:-10px;">
-                個々の日記とは関係なく、公開ページの上段に常に表示される紹介文です。HTMLタグ(リンク・画像など)がそのまま使えます。<br>
-                例: &lt;p&gt;こんにちは！&lt;/p&gt;&lt;a href="https://example.com"&gt;リンク&lt;/a&gt;&lt;img src="https://example.com/image.png"&gt;
-            </p>
             <form id="announcementForm" onsubmit="saveAnnouncement(event)">
                 <div class="form-group">
                     <span class="editable-label">内容(HTML)</span>
                     <textarea id="announcementContentInput" style="height:220px;">${siteAnnouncement.content || ''}</textarea>
+                </div>
+                <div class="form-group">
+                    <div class="announcement-image-btn-row">
+                        <label class="file-input-label">
+                            <span>画像を選択して挿入（１）</span>
+                            <input type="file" accept="image/*" style="display:none;" onchange="handleAnnouncementImageSelect(this)">
+                        </label>
+                        <label class="file-input-label">
+                            <span>画像を選択して挿入（２）</span>
+                            <input type="file" accept="image/*" style="display:none;" onchange="handleAnnouncementImageSelect(this)">
+                        </label>
+                        <label class="file-input-label">
+                            <span>画像を選択して挿入（３）</span>
+                            <input type="file" accept="image/*" style="display:none;" onchange="handleAnnouncementImageSelect(this)">
+                        </label>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
@@ -2012,6 +2111,29 @@
                 </div>
             </form>
         `;
+    }
+
+    // お知らせ本文に画像を挿入する。日記の画像添付と同じくbase64化して埋め込むため、
+    // GitHubの添付リンクのように外部URLに依存せず、公開ページでも確実に表示される。
+    function handleAnnouncementImageSelect(input) {
+        const file = input.files && input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => insertAnnouncementImageTag(reader.result);
+        reader.readAsDataURL(file);
+        input.value = '';
+    }
+
+    function insertAnnouncementImageTag(dataUrl) {
+        const textarea = document.getElementById('announcementContentInput');
+        if (!textarea) return;
+        const imgTag = `<img src="${dataUrl}" style="max-width:100%; height:auto;">\n`;
+        const start = (typeof textarea.selectionStart === 'number') ? textarea.selectionStart : textarea.value.length;
+        const end = (typeof textarea.selectionEnd === 'number') ? textarea.selectionEnd : textarea.value.length;
+        textarea.value = textarea.value.slice(0, start) + imgTag + textarea.value.slice(end);
+        const newPos = start + imgTag.length;
+        textarea.selectionStart = textarea.selectionEnd = newPos;
+        textarea.focus();
     }
 
     async function saveAnnouncement(e) {
