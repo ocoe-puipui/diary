@@ -677,12 +677,12 @@
         <div class="notebook-panel">
             <h3 id="calendarHeader" style="margin-top: 0;">Calendar</h3>
             <div class="calendar-header">
-                <button class="calendar-nav-btn" onclick="moveCalendar(-1)">◀</button>
+                <button class="calendar-nav-btn" id="calendarPrevBtn" onclick="moveCalendar(-1)">◀</button>
                 <div class="calendar-title" id="calendarTitle">
                     <span class="calendar-era" id="calendarEra"></span>
                     <span class="calendar-western" id="calendarWestern">2026.07</span>
                 </div>
-                <button class="calendar-nav-btn" onclick="moveCalendar(1)">▶</button>
+                <button class="calendar-nav-btn" id="calendarNextBtn" onclick="moveCalendar(1)">▶</button>
             </div>
             <div class="calendar-grid" id="calendarGrid"></div>
             <div class="calendar-footer">
@@ -874,58 +874,205 @@
         }
     };
 
-    // 閲覧専用デモモードの初期化。編集系UIを全て隠し、public_entries.json の内容だけを表示する。
+    // 閲覧専用デモモードの初期化。
+    // 編集系UI(新規作成・削除・公開切替・一括操作・インポート/エクスポート・ノート追加/名前変更)は全て隠す。
+    // 一方でノート切替・カレンダー・Recent Activityは「アプリの機能紹介」として残し、
+    // public_entries.json (ノート単位でグループ化された公開エントリ)の範囲内で閲覧できるようにする。
+    // 内部的には notebooks / currentNotebookId / currentSelectId など既存の変数をそのまま流用するが、
+    // 通常編集モードの初期化(initDBなど)は一切呼ばないため、書き込み系の関数は使用しない。
     async function initReadOnlyDemo() {
         document.querySelector('.container').classList.add('demo-mode');
-        document.querySelector('.notebook-tabs-container').style.display = 'none';
-        document.getElementById('sidebarRightPanel').style.display = 'none';
         document.getElementById('newPostBtn').style.display = 'none';
         document.getElementById('bulkPublicActions').style.display = 'none';
         document.getElementById('mgmtHeader').style.display = 'none';
         document.getElementById('mgmtActions').style.display = 'none';
-        document.getElementById('currentNotebookTitle').innerText = '📖 公開日記(閲覧専用)';
         document.querySelector('.theme-selector-wrapper').style.display = 'none';
         document.getElementById('indexHeader').innerText = 'Index';
+        document.getElementById('activityHeader').innerText = 'Recent Activity';
+        document.getElementById('calendarHeader').innerText = 'Calendar';
 
-        let entries = [];
+        // カレンダーのナビゲーションボタンを、デモ専用の(書き込みを行わない)ハンドラに差し替える
+        document.getElementById('calendarPrevBtn').onclick = () => moveDemoCalendar(-1);
+        document.getElementById('calendarNextBtn').onclick = () => moveDemoCalendar(1);
+        document.getElementById('todayBtn').onclick = jumpToDemoToday;
+
         try {
             const res = await fetch('public_entries.json', { cache: 'no-store' });
             if (res.ok) {
                 const data = await res.json();
-                entries = data.entries || [];
+                notebooks = data.notebooks || [];
+            } else {
+                notebooks = [];
             }
         } catch (err) {
-            entries = [];
+            notebooks = [];
         }
 
-        const indexList = document.getElementById('indexList');
-        indexList.innerHTML = '';
-        if (entries.length === 0) {
-            indexList.innerHTML = `<li style="color:var(--text-muted);font-size:0.9rem;font-weight:600;padding:10px 0;text-align:center;">公開されている日記はまだありません。</li>`;
+        if (notebooks.length === 0) {
+            document.querySelector('.notebook-tabs-container').style.display = 'none';
+            document.getElementById('sidebarRightPanel').style.display = 'none';
+            document.getElementById('currentNotebookTitle').innerText = '📖 公開日記(閲覧専用)';
+            document.getElementById('indexList').innerHTML = `<li style="color:var(--text-muted);font-size:0.9rem;font-weight:600;padding:10px 0;text-align:center;">公開されている日記はまだありません。</li>`;
             document.getElementById('mainPanel').innerHTML = `<div style="text-align:center; padding:50px; font-weight:600; color:var(--text-muted);">公開されている日記はまだありません。</div>`;
             return;
         }
 
+        currentNotebookId = notebooks[0].id;
+        switchDemoNotebook(currentNotebookId);
+    }
+
+    function getDemoNotebook() { return notebooks.find(n => n.id === currentNotebookId); }
+    function getDemoEntries() { const nb = getDemoNotebook(); return nb ? nb.entries : []; }
+
+    // ノート切替専用(追加・削除・リネームボタンは持たせない)
+    function renderDemoTabs() {
+        const container = document.getElementById('notebookTabs');
+        container.innerHTML = '';
+        notebooks.forEach(nb => {
+            const btn = document.createElement('button');
+            btn.className = `notebook-tab ${nb.id === currentNotebookId ? 'active' : ''}`;
+            const textSpan = document.createElement('span');
+            textSpan.className = 'notebook-tab-text';
+            textSpan.innerText = nb.name;
+            textSpan.onclick = () => switchDemoNotebook(nb.id);
+            btn.appendChild(textSpan);
+            container.appendChild(btn);
+        });
+    }
+
+    function switchDemoNotebook(id) {
+        currentNotebookId = id;
+        currentSelectId = null;
+        const nb = getDemoNotebook();
+        if (!nb) return;
+        document.getElementById('currentNotebookTitle').innerText = `📖 ${nb.name}(閲覧専用)`;
+        applyTheme(nb.theme);
+        renderDemoTabs();
+        refreshDemoSidebar();
+        renderDemoCalendar();
+        renderDemoActivity();
+        const entries = getDemoEntries();
+        if (entries.length > 0) {
+            viewDemoEntry(entries[0].id);
+        } else {
+            document.getElementById('mainPanel').innerHTML = `<div style="text-align:center; padding:50px; font-weight:600; color:var(--text-muted);">このノートにはまだ公開されている日記はありません。</div>`;
+        }
+    }
+
+    function refreshDemoSidebar() {
+        const indexList = document.getElementById('indexList');
+        indexList.innerHTML = '';
+        const entries = getDemoEntries();
+        if (entries.length === 0) {
+            indexList.innerHTML = `<li style="color:var(--text-muted);font-size:0.9rem;font-weight:600;padding:10px 0;text-align:center;">公開されている日記はまだありません。</li>`;
+            return;
+        }
         entries.forEach((entry, idx) => {
             const li = document.createElement('li');
-            li.className = 'index-item';
+            li.className = `index-item ${entry.id === currentSelectId ? 'active' : ''}`;
             li.innerHTML = `
                 <div class="index-row-top"><span class="index-page-num">P.${entries.length - idx}</span><span>${formatSlashDate(entry.date)}</span></div>
                 <div class="index-row-bottom ${!entry.title ? 'empty-title' : ''}" title="${entry.title || '(no title)'}">${entry.title || '(no title)'}</div>
             `;
-            li.onclick = () => {
-                document.querySelectorAll('#indexList .index-item').forEach(el => el.classList.remove('active'));
-                li.classList.add('active');
-                renderReadOnlyEntry(entry);
-            };
-            if (idx === 0) li.classList.add('active');
+            li.onclick = () => viewDemoEntry(entry.id);
             indexList.appendChild(li);
         });
-
-        renderReadOnlyEntry(entries[0]);
     }
 
-    function renderReadOnlyEntry(entry) {
+    function renderDemoCalendar() {
+        const grid = document.getElementById('calendarGrid');
+        grid.innerHTML = '';
+        const dateObj = new Date(calendarYear, calendarMonth, 1);
+        document.getElementById('calendarEra').innerText = new Intl.DateTimeFormat('ja-JP-u-ca-japanese', { year: 'numeric' }).format(dateObj);
+        document.getElementById('calendarWestern').innerText = `${calendarYear}.${String(calendarMonth + 1).padStart(2, '0')}`;
+
+        ['日', '月', '火', '水', '木', '金', '土'].forEach(d => {
+            const label = document.createElement('div'); label.className = 'calendar-day-label'; label.innerText = d; grid.appendChild(label);
+        });
+
+        const firstDayIdx = new Date(calendarYear, calendarMonth, 1).getDay();
+        const lastDate = new Date(calendarYear, calendarMonth + 1, 0).getDate();
+        const prevLastDate = new Date(calendarYear, calendarMonth, 0).getDate();
+
+        for (let i = firstDayIdx - 1; i >= 0; i--) {
+            const cell = document.createElement('div'); cell.className = 'calendar-cell'; cell.innerText = prevLastDate - i; grid.appendChild(cell);
+        }
+
+        const entries = getDemoEntries();
+        let activeDateString = "";
+        if (currentSelectId) {
+            const activeEntry = entries.find(e => e.id === currentSelectId);
+            if (activeEntry) activeDateString = activeEntry.date;
+        }
+
+        for (let date = 1; date <= lastDate; date++) {
+            const cell = document.createElement('div');
+            cell.className = 'calendar-cell current-month';
+            cell.innerText = date;
+            const dateStr = `${calendarYear}-${String(calendarMonth + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
+
+            const foundEntry = entries.find(e => e.date === dateStr);
+            if (foundEntry) {
+                cell.classList.add('has-diary');
+                cell.onclick = () => viewDemoEntry(foundEntry.id);
+            }
+            if (dateStr === activeDateString) cell.classList.add('is-active');
+
+            grid.appendChild(cell);
+        }
+
+        const totalCells = firstDayIdx + lastDate;
+        const nextMonthCells = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+        for (let i = 1; i <= nextMonthCells; i++) {
+            const cell = document.createElement('div'); cell.className = 'calendar-cell'; cell.innerText = i; grid.appendChild(cell);
+        }
+    }
+
+    function moveDemoCalendar(direction) {
+        calendarMonth += direction;
+        if (calendarMonth > 11) { calendarMonth = 0; calendarYear++; }
+        if (calendarMonth < 0) { calendarMonth = 11; calendarYear--; }
+        renderDemoCalendar();
+    }
+
+    function jumpToDemoToday() {
+        const today = new Date();
+        calendarYear = today.getFullYear();
+        calendarMonth = today.getMonth();
+        renderDemoCalendar();
+    }
+
+    // Recent Activityは編集履歴を持たないため、代わりに現在のノート内の最新5件を読み取り専用で表示する
+    function renderDemoActivity() {
+        const historyList = document.getElementById('historyList');
+        historyList.innerHTML = '';
+        const nb = getDemoNotebook();
+        const recent = [...getDemoEntries()].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
+        if (recent.length === 0) {
+            historyList.innerHTML = `<li style="color:var(--text-muted);font-size:0.85rem;font-weight:600;padding:10px 0;text-align:center;">最近の履歴はありません。</li>`;
+            return;
+        }
+        recent.forEach(entry => {
+            const li = document.createElement('li');
+            li.className = 'history-item';
+            li.innerHTML = `
+                <div class="history-row-top"><span class="history-notebook-name">📔 ${nb.name}</span><span>${formatSlashDate(entry.date)}</span></div>
+                <div class="history-row-bottom ${!entry.title ? 'empty-title' : ''}" title="${entry.title || '(no title)'}">${entry.title || '(no title)'}</div>
+            `;
+            li.onclick = () => viewDemoEntry(entry.id);
+            historyList.appendChild(li);
+        });
+    }
+
+    function viewDemoEntry(id) {
+        currentSelectId = id;
+        const nb = getDemoNotebook();
+        const entry = getDemoEntries().find(e => e.id === id);
+        if (!entry) return;
+
+        refreshDemoSidebar();
+        renderDemoCalendar();
+
         let galleryHtml = '';
         if (entry.images && entry.images.length > 0) {
             galleryHtml = '<div class="diary-view-gallery">';
@@ -935,15 +1082,16 @@
             });
             galleryHtml += '</div>';
         }
+
         document.getElementById('mainPanel').innerHTML = `
             <h2>NOTE</h2>
             ${entry.title ? `<div class="diary-view-title">📌 ${entry.title}</div>` : ''}
             <div class="diary-view-header">
-                <div>🗓️ ${formatJapaneseDate(entry.date)}</div>
-                <div>${entry.weather || ''}</div>
+                <div>🗓️ <strong>Date:</strong> ${formatJapaneseDate(entry.date)}</div>
+                <div><strong>Weather:</strong> ${entry.weather || `<span style="color:#b0a99f; font-style:italic;">Optional</span>`}</div>
             </div>
             ${galleryHtml}
-            <div class="diary-view-text">${entry.content}</div>
+            <div class="${nb && nb.isVertical ? 'diary-view-text vertical' : 'diary-view-text'}">${entry.content}</div>
         `;
     }
 
@@ -1487,27 +1635,35 @@
         a.click();
     }
 
-    // 公開マークが付いたエントリだけを抽出し、公開ページ用のJSONとして書き出す。
+    // 公開マークが付いたエントリだけを、所属ノート単位でグループ化して公開ページ用のJSONとして書き出す。
+    // ノート名・テーマ・縦書き/横書きの情報も保持することで、公開ページ側でもノート切替機能を再現できるようにする。
+    // 公開エントリが1件もないノートは書き出し対象から除外する。
     // 書き出したファイルは手動で public_entries.json としてリポジトリに配置・コミットする運用。
     function exportPublicData() {
-        const pubList = [];
+        const pubNotebooks = [];
         notebooks.forEach(nb => {
-            nb.entries.forEach(entry => {
-                if (entry.isPublic) {
-                    pubList.push({
-                        id: 'pub_' + entry.id,
-                        date: entry.date,
-                        title: entry.title || '',
-                        content: entry.content || '',
-                        weather: entry.weather || '',
-                        images: (entry.images || []).map(img => (typeof img === 'string' ? img : img.data))
-                    });
-                }
+            const pubEntries = nb.entries
+                .filter(entry => entry.isPublic)
+                .map(entry => ({
+                    id: 'pub_' + entry.id,
+                    date: entry.date,
+                    title: entry.title || '',
+                    content: entry.content || '',
+                    weather: entry.weather || '',
+                    images: (entry.images || []).map(img => (typeof img === 'string' ? img : img.data))
+                }));
+            if (pubEntries.length === 0) return;
+            pubEntries.sort((a, b) => new Date(b.date) - new Date(a.date));
+            pubNotebooks.push({
+                id: 'pub_' + nb.id,
+                name: nb.name,
+                theme: nb.theme || 'theme-classic',
+                isVertical: !!nb.isVertical,
+                entries: pubEntries
             });
         });
-        pubList.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-        const payload = { version: "1.0", updatedAt: new Date().toISOString().substring(0, 10), entries: pubList };
+        const payload = { version: "2.0", updatedAt: new Date().toISOString().substring(0, 10), notebooks: pubNotebooks };
         const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
         const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `public_entries.json`;
         a.click();
