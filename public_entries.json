@@ -2,7 +2,7 @@
   "version": "2.1",
   "updatedAt": "2026-08-10",
   "announcement": {
-    "content": "<img src=\"https://example.com/image.png\">\nAI生成画像（Stable Diffusion、ComfyUIなど）をプロンプトやメタデータを管理・閲覧できるアプリ「Seed Book」を、週末を中心にひとりで開発しています。プログラミングの専門知識はなく、AIコーディングツールとの対話を通じて開発しています。近日リリースし、オープンソースとしても公開する予定です。"
+    "content": "<img src=\"https://github.com/ocoe-puipui/diary/blob/main/UI1.png\">\nAI生成画像（Stable Diffusion、ComfyUIなど）をプロンプトやメタデータを管理・閲覧できるアプリ「Seed Book」を、週末を中心にひとりで開発しています。プログラミングの専門知識はなく、AIコーディングツールとの対話を通じて開発しています。近日リリースし、オープンソースとしても公開する予定です。"
   },
   "notebooks": [
     {
