@@ -881,7 +881,6 @@
     // 内部的には notebooks / currentNotebookId / currentSelectId など既存の変数をそのまま流用するが、
     // 通常編集モードの初期化(initDBなど)は一切呼ばないため、書き込み系の関数は使用しない。
     async function initReadOnlyDemo() {
-        document.querySelector('.container').classList.add('demo-mode');
         document.getElementById('newPostBtn').style.display = 'none';
         document.getElementById('bulkPublicActions').style.display = 'none';
         document.getElementById('mgmtHeader').style.display = 'none';
@@ -909,6 +908,8 @@
         }
 
         if (notebooks.length === 0) {
+            // 公開エントリが無い場合のみ、右カラム(Calendar/Recent Activity)を隠して2カラム表示にする
+            document.querySelector('.container').classList.add('demo-mode');
             document.querySelector('.notebook-tabs-container').style.display = 'none';
             document.getElementById('sidebarRightPanel').style.display = 'none';
             document.getElementById('currentNotebookTitle').innerText = '📖 公開日記(閲覧専用)';
