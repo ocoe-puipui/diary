@@ -1,5 +1,8 @@
 # 個人の日記データファイルをすべて除外する
 *.json
 
+# 公開用の日記データ(public_entries.json)だけはGitHubで公開したいので例外にする
+!public_entries.json
+
 # もしサンプル用のJSONだけはGitHubで公開したい（みんなに見せたい）場合は、以下のように例外を指定できます
 !sample_diary.json

@@ -34,20 +34,18 @@
 - [x] デモモードでは `public_entries.json` を読み込み、Index一覧+本文表示のみの読み取り専用ビューを表示する(`renderReadOnlyEntry()`)
 - [x] コードをダウンロードして別ドメイン/ローカルで実行した場合は `isLiveDemo` が false になり、通常通りフル機能で動作することを確認(構文チェック・ロジック確認)
 
-JavaScript構文チェック済み(Node.jsで検証、エラーなし)。実機ブラウザでの最終確認、および実際に`https://ocoe-puipui.github.io/diary/`へpushしてからの表示確認はフェーズ4/5で実施。
-
-JavaScript構文チェック済み(Node.jsで検証、エラーなし)。ブラウザでの実機動作確認はフェーズ4で実施。
+JavaScript構文チェック済み(Node.jsで検証、エラーなし)。実際に`https://ocoe-puipui.github.io/diary/`へpushしてからの表示確認はフェーズ4/5で実施。
 
 ### フェーズ3: リポジトリ設定
 
-- [ ] `.gitignore` に `!public_entries.json` の例外を追加
-- [ ] 初回の `public_entries.json` を作成・配置
+- [x] `.gitignore` に `!public_entries.json` の例外を追加(2026-08-10)
+- [ ] 初回の `public_entries.json` を作成・配置(puipuiさんの作業: 「export public entries」→`diary`フォルダに配置→コミット)
 
 ### フェーズ4: 動作確認
 
-- [ ] ローカルブラウザで、公開マークを付けたエントリのみが公開日記タブに表示されることを確認
-- [ ] 個人日記(IndexedDB)側の既存データに影響がないことを確認
-- [ ] 公開日記タブが読み取り専用であることを確認(編集・削除できないこと)
+- [x] ローカルブラウザ(file://)で、公開マークを付けたエントリが正常に管理できることを確認
+- [x] 個人日記(IndexedDB)側の既存データに影響がないことを確認
+- [ ] `public_entries.json` を配置・pushした後、本番URL(`https://ocoe-puipui.github.io/diary/`)の「公開日記(閲覧専用)」に正しく表示されることを確認
 
 ### フェーズ5: 公開・反映
 
