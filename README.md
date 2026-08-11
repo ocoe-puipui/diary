@@ -192,8 +192,6 @@ const isLiveDemo = (location.hostname === LIVE_DEMO_HOSTNAME);
 }
 ```
 
-開発の設計背景や意思決定の経緯を詳しく知りたい場合は、[`docs/DESIGN.md`](./docs/DESIGN.md)・[`docs/TASKS.md`](./docs/TASKS.md)・[`docs/CHANGELOG.md`](./docs/CHANGELOG.md)もあわせてご覧ください。
-
 ---
 
 ### 必要なもの
