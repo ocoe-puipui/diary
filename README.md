@@ -1,157 +1,161 @@
-# 日記アプリ
-
-ブラウザベースの日記アプリです。データはすべてブラウザ内(IndexedDB/localStorage)に保存され、サーバーには一切送信されません。
-
-🔗 **公開デモ**: https://ocoe-puipui.github.io/diary/
-（このURLは閲覧専用デモモードです。詳しくは[「公開デモについて」](#-公開デモについて)をご覧ください）
-
-📄 **ライセンス**: [MIT License](./LICENSE)
+🌐 日本語版 (Japanese version): [README.ja-JP.md](./README.ja-JP.md)
 
 ---
 
-## 📖 公開デモについて
+# Diary App
 
-上記の公開URLは、作者(puipui)がサンプルとして選んだ日記だけを**閲覧専用**で表示するモードになっています。新規作成・編集・削除・公開/非公開の切り替えといった操作はできません。
+A browser-based diary app. All data is stored locally in the browser (IndexedDB/localStorage) and is never sent to any server.
 
-これは、サンプルとして公開している日記の内容を、訪れた人が誤って書き換えたり消したりできないようにするための制限です。一方で、複数ノートの切り替え・カレンダー・Recent Activityといった閲覧系の機能はそのまま体験できるようにしています。
+🔗 **Live demo**: https://ocoe-puipui.github.io/diary/
+(This URL runs in a read-only demo mode. See [About the Live Demo](#-about-the-live-demo) for details.)
 
-**全機能(新規作成・編集・削除・公開/非公開の切り替えなど)を試したい場合は、下記の「フォーク・ダウンロードして使う」の手順で、ご自身の環境で`index.html`を開いてください。** ダウンロードしたご自身の環境では、この制限はかからずフル機能で使えます。
-
----
-
-## 機能
-
-### 📝 日記
-- **日付・タイトル・本文の記録**
-- **複数画像対応** - 一つの日記に複数の画像を添付可能
-- **天気・備考欄** - 天気や気分などのメタ情報を追加
-- **編集履歴**
-
-### 🎨 10種類のテーマ
-
-- **横書き・縦書き対応**
-- **レスポンシブデザイン**
-
-### 📚 ノート管理
-- **複数ノート作成** - 異なるカテゴリーで日記を分類
-  - 各ノートは独立したテーマと書き方向を持つ
-  - ノート名のカスタマイズが可能
-
-### 📅 カレンダー機能
-- **日記の有無を可視化** - 日記がある日付をハイライト表示
-- **月間ナビゲーション** - 前後の月へ簡単に移動
-- **今日へのジャンプ** - ワンクリックで本日へ移動
-
-### 🌐 公開日記機能
-- **公開マーク** - 日記ごとに「公開する/しない」を切り替え可能(編集画面・一覧の両方から)
-- **一括切り替え** - ノート内の全エントリを「すべて公開にする」「すべて非公開にする」で一括変更
-- **公開用データの書き出し** - 公開マークを付けたエントリだけを`public_entries.json`として書き出し、コード本体とは別のコンテンツ用リポジトリ経由でGitHub Pages等に公開できる
-
-### 💾 データ管理
-- **自動保存** - すべての変更は自動的に保存
-- **バックアップ・復元** - JSON形式でデータをエクスポート/インポート
-- **ローカル保存** - すべてのデータをブラウザ内に保存(サーバーには送信されません)
+📄 **License**: [MIT License](./LICENSE)
 
 ---
 
-## 使い方
+## 📖 About the Live Demo
 
-1. **ブラウザで開く**
+The live demo URL above runs in a **read-only** mode that only shows diary entries the author (puipui) has chosen to publish as samples. Creating, editing, deleting, and toggling public/private status are all disabled.
+
+This restriction exists so that visitors can't accidentally modify or delete the sample content being shown. Read-only features such as switching between multiple notebooks, the calendar, and Recent Activity are still fully available to try.
+
+**To try the full feature set (create, edit, delete, toggle public/private, etc.), please follow the "Fork or download to use" section below and open `index.html` in your own environment.** In your own downloaded copy, this restriction does not apply and the app runs with full functionality.
+
+---
+
+## Features
+
+### 📝 Diary
+- **Record date, title, and body text**
+- **Multiple images** - attach multiple images to a single entry
+- **Weather / notes field** - add metadata such as weather or mood
+- **Edit history**
+
+### 🎨 10 color themes
+
+- **Horizontal and vertical writing support**
+- **Responsive design**
+
+### 📚 Notebook management
+- **Create multiple notebooks** - organize diary entries into separate categories
+  - Each notebook has its own independent theme and writing direction
+  - Notebook names can be customized
+
+### 📅 Calendar
+- **Visualize which days have entries** - dates with entries are highlighted
+- **Month navigation** - move between months easily
+- **Jump to today** - jump to today's date with one click
+
+### 🌐 Public diary feature
+- **Public flag** - toggle "public/private" per entry (from both the edit screen and the list)
+- **Bulk toggle** - mark all entries in a notebook as public or private at once
+- **Export public data** - export only the entries marked public as `public_entries.json`, which can be published via a separate content repository and hosted on GitHub Pages, etc.
+
+### 💾 Data management
+- **Auto-save** - all changes are saved automatically
+- **Backup & restore** - export/import data as JSON
+- **Local storage only** - all data stays in the browser (nothing is sent to a server)
+
+---
+
+## Usage
+
+1. **Open in a browser**
    ```
-   index.html をブラウザで開くだけで起動します
+   Just open index.html in your browser to start.
    ```
 
-2. **初回使用時**
-   - デフォルトノート「日記1」が自動作成されます
-   - 「Write a Diary」ボタンをクリックして初めての日記を作成
+2. **First use**
+   - A default notebook "日記1" is created automatically
+   - Click "Write a Diary" to create your first entry
 
-3. **日記を書く**
-   - 日付・タイトル・本文を入力
-   - 画像をクリックして追加
-   - 必要であれば「この日記を公開する」にチェック
-   - 「Save to Chronicle」で保存
+3. **Write an entry**
+   - Enter the date, title, and body text
+   - Click to add images
+   - Check "Publish this entry" if you want it public
+   - Click "Save to Chronicle" to save
 
-### ノート管理
+### Managing notebooks
 
-- **ノート追加** - タブの「＋ 日記を追加」をクリック
-- **ノート切り替え** - 上部のタブからノート選択
-- **ノート名編集** - ノートタブの📔アイコンをクリック
+- **Add a notebook** - click "+ ADD" in the tab bar
+- **Switch notebooks** - select a tab at the top
+- **Rename a notebook** - click the 📔 icon on a notebook tab
 
-### テーマ・表示設定
+### Theme and display settings
 
-- **色テーマ変更** - ヘッダーの「COLOR THEME」ドロップダウンで選択
-- **書き方向変更** - 「WRITING DIRECTION」で「横書き」「縦書き」を切り替え
+- **Change color theme** - use the "COLOR THEME" dropdown in the header
+- **Change writing direction** - use "WRITING DIRECTION" to switch between horizontal and vertical writing
 
-### データバックアップ
+### Data backup
 
-- **エクスポート** - 左サイドバーの「export (backup)」をクリック
-- **インポート** - 「import (restore)」からバックアップファイルを選択して復元
+- **Export** - click "export (backup)" in the left sidebar
+- **Import** - select a backup file from "import (restore)" to restore it
 
-### 日記を公開する(GitHub Pages等で使う場合)
+### Publishing entries (for use with GitHub Pages, etc.)
 
-公開用データ(`public_entries.json`)は、アプリ本体のコードとは別の専用リポジトリ(このプロジェクトでは[`diary-content`](https://github.com/ocoe-puipui/diary-content))で管理します。コード側のリポジトリをフォーク・ダウンロードした人に、puipui個人の日記内容が同梱されてしまわないようにするための分離です。
+The public data file (`public_entries.json`) is managed in a separate, dedicated repository from the app's code (for this project, [`diary-content`](https://github.com/ocoe-puipui/diary-content)). This separation ensures that anyone who forks or downloads the code repository does not also receive puipui's personal diary content.
 
-1. 公開したい日記の編集画面、またはサイドバー一覧の🌐アイコンで「公開する」に設定
-2. 複数まとめて設定したい場合は、サイドバーの「すべて公開にする」「すべて非公開にする」を利用
-3. Managementの「export public entries」で`public_entries.json`を書き出す
-4. 書き出したファイルを、コンテンツ用リポジトリ(`diary-content`)にコミット・push(アプリ本体のリポジトリにはコミットしません)
-5. 公開ページを開くと、公開マークを付けた日記だけが表示されます
+1. Mark the entries you want to publish using the 🌐 icon in the edit screen or sidebar list
+2. To set several at once, use "Publish all" / "Unpublish all" in the sidebar
+3. Use "export public entries" in Management to export `public_entries.json`
+4. Commit and push the exported file to the content repository (`diary-content`) — do not commit it to the app's code repository
+5. Once published, only the entries you marked public will appear on the public page
 
-ご自身の環境でフォークして使う場合は、`index.html`内の`PUBLIC_CONTENT_URL`(お知らせ・公開データの取得先URL)をご自身のコンテンツ用リポジトリのRaw URLに書き換えてください。
+If you fork this project for your own use, update the `PUBLIC_CONTENT_URL` constant in `index.html` (used to fetch the announcement/public data) to point to your own content repository's raw URL.
 
 ---
 
-## 🍴 フォーク・ダウンロードして使う
+## 🍴 Fork or download to use
 
-このリポジトリはMITライセンスで公開しており、自由にフォーク・ダウンロードして使っていただけます。
+This repository is released under the MIT License, and you're free to fork or download it for your own use.
 
-### 始め方
+### Getting started
 
-1. リポジトリをダウンロード、またはフォーク
-2. `index.html`をブラウザで開く(それだけで起動します。サーバーやビルド不要)
-3. そのまま自分用の日記として使い始められます
+1. Download or fork this repository
+2. Open `index.html` in a browser (that's all — no server or build step required)
+3. Start using it right away as your own diary
 
-### ⚠️ 1点だけ確認・修正をおすすめする箇所
+### ⚠️ One thing worth checking
 
-`index.html`のスクリプト内、冒頭付近に以下の一文があります。
+Near the top of the script in `index.html`, you'll find the following:
 
 ```javascript
 const LIVE_DEMO_HOSTNAME = 'ocoe-puipui.github.io';
 const isLiveDemo = (location.hostname === LIVE_DEMO_HOSTNAME);
 ```
 
-これは**作者(puipui)自身の公開ページ専用の設定**です。このホスト名でアクセスされた場合だけ、編集系の機能を隠す「閲覧専用デモモード」に切り替える仕組みになっています。
+This is a **setting specific to the author's (puipui's) own public page**. It switches the app into a "read-only demo mode" (which hides all editing features) only when accessed from that exact hostname.
 
-ご自身の環境で使う場合、この一文はそのままにしておいても動作に支障はありません(ご自身のドメインとは一致しないため、常にフル機能で使えます)。ただし紛らわしいので、以下のいずれかの対応を推奨します。
+When you run this in your own environment, leaving this line as-is causes no problems (since your hostname won't match, the app will always run with full functionality). However, to avoid confusion, one of the following is recommended:
 
-- **そのまま個人利用する場合** → `isLiveDemo`の判定部分ごと削除してかまいません
-- **ご自身も「一部の日記だけ公開し、それ以外は編集不可にしたい」場合** → `LIVE_DEMO_HOSTNAME`の値をご自身の公開ドメインに書き換えてください
+- **If you're just using it for yourself** → feel free to remove the `isLiveDemo` check entirely
+- **If you also want to "publish only some entries while keeping the rest editable"** → change `LIVE_DEMO_HOSTNAME` to your own public domain
 
-### ライセンス表記について
+### About the license notice
 
-コード・ドキュメントを再配布・改変する場合も、[LICENSEファイル](./LICENSE)の著作権表示を保持していただければ、MITライセンスの範囲で自由にご利用いただけます(商用利用・改変・再配布いずれも可能です)。
+You're free to redistribute or modify this code and documentation under the terms of the MIT License, as long as you retain the copyright notice in the [LICENSE file](./LICENSE) (commercial use, modification, and redistribution are all permitted).
 
 ---
 
-## 💻 技術仕様
+## 💻 Technical details
 
-### フロントエンド技術
+### Frontend
 - **HTML5**
-- **CSS3** - Flexbox・Grid レイアウト、カスタムプロパティ
-- **Vanilla JavaScript** - フレームワーク依存なし
+- **CSS3** - Flexbox/Grid layout, custom properties
+- **Vanilla JavaScript** - no framework dependencies
 
-### ストレージ
+### Storage
 
 #### IndexedDB
-- 構造化データの効率的な管理
+- Efficient management of structured data
 
 #### localStorage
-- IndexedDB が利用不可な環境に自動対応
+- Automatic fallback for environments where IndexedDB is unavailable
 
-### データ構造
+### Data structure
 
 ```javascript
-// ノート
+// Notebook
 {
   id: 'nb_default',
   name: '日記1',
@@ -160,19 +164,19 @@ const isLiveDemo = (location.hostname === LIVE_DEMO_HOSTNAME);
   entries: []
 }
 
-// 日記エントリ
+// Diary entry
 {
   id: 'entry_1',
   date: '2026-07-12',
-  title: 'タイトル',
-  content: '本文内容',
-  weather: '晴天',
+  title: 'Title',
+  content: 'Body text',
+  weather: 'Sunny',
   images: ['base64_image_data_1', ...],
   isPublic: false
 }
 ```
 
-### 公開用データ構造(public_entries.json)
+### Public data structure (public_entries.json)
 
 ```javascript
 {
@@ -185,7 +189,7 @@ const isLiveDemo = (location.hostname === LIVE_DEMO_HOSTNAME);
       "theme": "theme-classic",
       "isVertical": false,
       "entries": [
-        { "id": "pub_entry_1", "date": "2026-07-12", "title": "タイトル", "content": "本文内容", "weather": "晴天", "images": [] }
+        { "id": "pub_entry_1", "date": "2026-07-12", "title": "Title", "content": "Body text", "weather": "Sunny", "images": [] }
       ]
     }
   ]
@@ -194,47 +198,47 @@ const isLiveDemo = (location.hostname === LIVE_DEMO_HOSTNAME);
 
 ---
 
-### 必要なもの
-- Web ブラウザ（上記推奨版以上）
-- インターネット接続（不要：オフライン対応）
+### Requirements
+- A web browser (recent version recommended)
+- Internet connection: not required (works fully offline)
 
 ---
 
-## 📖 用語解説
+## 📖 Glossary
 
-- **ノート** - 日記を分類するための単位。複数作成可能
-- **エントリ** - 1つの日記記事
-- **テーマ** - アプリケーションの配色設定
-- **エクスポート** - データをファイルに保存する機能
-- **インポート** - 保存されたファイルからデータを復元する機能
-- **公開マーク** - 日記を`public_entries.json`の書き出し対象に含めるかどうかのフラグ
-- **閲覧専用デモモード** - 作者の公開URLでのみ有効になる、編集機能を隠した表示モード
-
----
-
-## Tips & トラブルシューティング
-
-### データが保存されない
-- ブラウザの設定でローカルストレージが有効か確認
-- ブラウザキャッシュをクリアして再度試してください
-- 異なるブラウザでお試しください
-
-### 画像が表示されない
-- ブラウザのコンソール（F12キー）でエラーを確認
-- 画像ファイルのサイズが大きすぎないか確認
-
-### テーマが反映されない
-- ブラウザをリロード（Ctrl+F5）してください
-- 別のブラウザでお試しください
-
-### 公開ページに反映されない
-- `public_entries.json`を書き出した後、コンテンツ用リポジトリ(`diary-content`)へ実際にコミット・pushしたか確認してください(アプリ本体のリポジトリではありません)
-- `index.html`内の`PUBLIC_CONTENT_URL`が、正しいコンテンツ用リポジトリのRaw URLを指しているか確認してください
-- pushしてからGitHub Pagesへの反映まで数分かかることがあります
+- **Notebook** - a unit for organizing diary entries; you can create multiple notebooks
+- **Entry** - a single diary post
+- **Theme** - the app's color scheme setting
+- **Export** - saving data to a file
+- **Import** - restoring data from a saved file
+- **Public flag** - a flag indicating whether an entry is included when exporting `public_entries.json`
+- **Read-only demo mode** - a display mode, active only on the author's public URL, that hides all editing features
 
 ---
 
-## 📄 ライセンス
+## Tips & Troubleshooting
 
-このプロジェクトは [MIT License](./LICENSE) のもとで公開されています。
+### Data isn't being saved
+- Check that local storage is enabled in your browser settings
+- Try clearing your browser cache and trying again
+- Try a different browser
+
+### Images aren't showing up
+- Check the browser console (F12) for errors
+- Check whether the image file is too large
+
+### Theme changes aren't applied
+- Reload the browser (Ctrl+F5)
+- Try a different browser
+
+### Changes aren't showing up on the public page
+- Confirm that after exporting `public_entries.json`, you actually committed and pushed it to the content repository (`diary-content`) — not the app's code repository
+- Confirm that `PUBLIC_CONTENT_URL` in `index.html` points to the correct content repository's raw URL
+- It can take a few minutes for GitHub Pages to reflect changes after pushing
+
+---
+
+## 📄 License
+
+This project is released under the [MIT License](./LICENSE).
 Copyright (c) 2026 puipui
