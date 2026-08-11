@@ -399,6 +399,13 @@
             box-shadow: 0 6px 20px rgba(0,0,0,0.08);
         }
 
+        /* お知らせの画像は、文字エリア(notebook-header-panel)と一体化するよう縁取り・背景色を消す */
+        #announcementContent .diary-view-image-wrapper {
+            background-color: var(--panel-bg);
+            border: none;
+            padding: 0;
+        }
+
         button {
             background-color: var(--accent-color);
             color: white;
@@ -1004,7 +1011,34 @@
     let currentSelectId = null;
     let currentFormDate = null;
     let tempImagesArray = [];
-    let siteAnnouncement = { content: '', isPublic: false };
+    let siteAnnouncement = { content: '', images: [], isPublic: false };
+    let announcementTempImages = [];
+
+    // お知らせ本文(HTML)の中に直接埋め込まれたbase64画像タグを抽出し、本文とは別の配列に分離する。
+    function extractImagesFromAnnouncementContent(content) {
+        const images = [];
+        const imgTagPattern = /<img[^>]*src="(data:[^"]+)"[^>]*>\n?/g;
+        const text = content.replace(imgTagPattern, (match, dataUrl) => {
+            images.push({ id: Date.now() + Math.random(), data: dataUrl });
+            return '';
+        });
+        return { text, images };
+    }
+
+    // お知らせの本文と画像を組み立てて表示用HTMLにする(プレビュー・公開ページ・書き出し共通)
+    function composeAnnouncementHtml(announcement) {
+        if (!announcement) return '';
+        let galleryHtml = '';
+        if (announcement.images && announcement.images.length > 0) {
+            galleryHtml = '<div class="diary-view-gallery">';
+            announcement.images.forEach(img => {
+                const src = typeof img === 'string' ? img : img.data;
+                galleryHtml += `<div class="diary-view-image-wrapper"><img src="${src}"></div>`;
+            });
+            galleryHtml += '</div>';
+        }
+        return `${galleryHtml}${announcement.content || ''}`;
+    }
     let indexPageSize = 5;
     let indexPageOffset = 0;
     let mainViewMode = 'feed'; // 'single'(1件詳細表示) または 'feed'(ページ単位でまとめて表示)
@@ -1059,7 +1093,16 @@
         ]);
         currentNotebookId = await getDBValue("current_nb_id", 'nb_default');
         editHistory = await getDBValue("edit_history", []);
-        siteAnnouncement = await getDBValue("site_announcement", { content: '', isPublic: false });
+        siteAnnouncement = await getDBValue("site_announcement", { content: '', images: [], isPublic: false });
+        if (!siteAnnouncement.images) siteAnnouncement.images = [];
+        // 旧バージョンで本文(HTML)に直接埋め込まれていたbase64画像を、別フィールド(images)に分離する。
+        // 巨大な文字列がそのままテキストエリアに入ると編集画面を開くたびに固まってしまうため、一度だけ移行する。
+        const migrated = extractImagesFromAnnouncementContent(siteAnnouncement.content || '');
+        if (migrated.images.length > 0) {
+            siteAnnouncement.content = migrated.text;
+            siteAnnouncement.images = [...siteAnnouncement.images, ...migrated.images];
+            await setDBValue("site_announcement", siteAnnouncement);
+        }
 
         if (!notebooks.find(nb => nb.id === currentNotebookId)) {
             currentNotebookId = notebooks[0].id;
@@ -1137,8 +1180,8 @@
 
         // お知らせは、公開エントリの有無に関わらず常に表示する
         const announcementEl = document.getElementById('announcementContent');
-        if (announcement && announcement.content) {
-            announcementEl.innerHTML = announcement.content;
+        if (announcement && (announcement.content || (announcement.images && announcement.images.length > 0))) {
+            announcementEl.innerHTML = composeAnnouncementHtml(announcement);
             announcementEl.style.display = 'block';
             document.querySelector('.notebook-header-panel').style.display = '';
         } else {
@@ -1519,11 +1562,12 @@
     function renderAnnouncementPreview() {
         const el = document.getElementById('announcementContent');
         if (!el) return;
-        if (siteAnnouncement && siteAnnouncement.content) {
+        const hasContent = siteAnnouncement && (siteAnnouncement.content || (siteAnnouncement.images && siteAnnouncement.images.length > 0));
+        if (hasContent) {
             const badge = siteAnnouncement.isPublic
                 ? ''
                 : '<div style="margin-bottom:8px;"><span style="font-size:0.75rem; font-weight:700; color:var(--text-muted);">🔒 非公開(プレビューのみ・公開ページには表示されません)</span></div>';
-            el.innerHTML = `${badge}${siteAnnouncement.content}`;
+            el.innerHTML = `${badge}${composeAnnouncementHtml(siteAnnouncement)}`;
             el.style.display = 'block';
         } else {
             el.style.display = 'none';
@@ -2079,11 +2123,12 @@
     // 入力はHTMLをそのまま受け付ける(編集できるのはこのアプリの所有者本人のみのため)。
     function showAnnouncementForm() {
         document.getElementById('mainPanelEntryNav').innerHTML = '';
+        announcementTempImages = [...(siteAnnouncement.images || [])];
         document.getElementById('mainPanel').innerHTML = `
             <h2>お知らせ設定</h2>
             <form id="announcementForm" onsubmit="saveAnnouncement(event)">
                 <div class="form-group">
-                    <span class="editable-label">内容(HTML)</span>
+                    <span class="editable-label">説明文(HTML)</span>
                     <textarea id="announcementContentInput" style="height:220px;">${siteAnnouncement.content || ''}</textarea>
                 </div>
                 <div class="form-group">
@@ -2101,6 +2146,7 @@
                             <input type="file" accept="image/*" style="display:none;" onchange="handleAnnouncementImageSelect(this)">
                         </label>
                     </div>
+                    <div class="form-images-grid" id="announcementImagesGrid"></div>
                 </div>
                 <div class="form-group">
                     <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
@@ -2114,35 +2160,42 @@
                 </div>
             </form>
         `;
+        renderAnnouncementImagesGrid();
     }
 
-    // お知らせ本文に画像を挿入する。日記の画像添付と同じくbase64化して埋め込むため、
-    // GitHubの添付リンクのように外部URLに依存せず、公開ページでも確実に表示される。
+    // お知らせの画像は本文(HTML)とは別の配列で管理する(日記の画像添付と同じ方式)。
+    // 本文のテキストエリアに巨大なbase64文字列が入らないため、編集画面を開いても固まらない。
     function handleAnnouncementImageSelect(input) {
         const file = input.files && input.files[0];
         if (!file) return;
         const reader = new FileReader();
-        reader.onload = () => insertAnnouncementImageTag(reader.result);
+        reader.onload = () => {
+            announcementTempImages.push({ id: Date.now() + Math.random(), data: reader.result });
+            renderAnnouncementImagesGrid();
+        };
         reader.readAsDataURL(file);
         input.value = '';
     }
 
-    function insertAnnouncementImageTag(dataUrl) {
-        const textarea = document.getElementById('announcementContentInput');
-        if (!textarea) return;
-        const imgTag = `<img src="${dataUrl}" style="max-width:100%; height:auto;">\n`;
-        const start = (typeof textarea.selectionStart === 'number') ? textarea.selectionStart : textarea.value.length;
-        const end = (typeof textarea.selectionEnd === 'number') ? textarea.selectionEnd : textarea.value.length;
-        textarea.value = textarea.value.slice(0, start) + imgTag + textarea.value.slice(end);
-        const newPos = start + imgTag.length;
-        textarea.selectionStart = textarea.selectionEnd = newPos;
-        textarea.focus();
+    function renderAnnouncementImagesGrid() {
+        const grid = document.getElementById('announcementImagesGrid'); if (!grid) return; grid.innerHTML = '';
+        announcementTempImages.forEach(img => {
+            const div = document.createElement('div'); div.className = 'form-image-item';
+            div.innerHTML = `<img src="${img.data}"><span class="file-size-badge">${formatBytes(img.data)}</span><button type="button" class="delete-btn" style="margin-top:5px; padding:4px; font-size:0.75rem; width:100%;" onclick="removeAnnouncementImage(${img.id})">Remove</button>`;
+            grid.appendChild(div);
+        });
+    }
+
+    function removeAnnouncementImage(id) {
+        announcementTempImages = announcementTempImages.filter(img => img.id !== id);
+        renderAnnouncementImagesGrid();
     }
 
     async function saveAnnouncement(e) {
         e.preventDefault();
         siteAnnouncement = {
             content: document.getElementById('announcementContentInput').value,
+            images: announcementTempImages,
             isPublic: document.getElementById('announcementIsPublic').checked
         };
         await setDBValue("site_announcement", siteAnnouncement);
@@ -2237,9 +2290,14 @@
         });
 
         const payload = {
-            version: "2.1",
+            version: "2.2",
             updatedAt: new Date().toISOString().substring(0, 10),
-            announcement: siteAnnouncement.isPublic ? { content: siteAnnouncement.content || '' } : null,
+            announcement: siteAnnouncement.isPublic
+                ? {
+                    content: siteAnnouncement.content || '',
+                    images: (siteAnnouncement.images || []).map(img => (typeof img === 'string' ? img : img.data))
+                }
+                : null,
             notebooks: pubNotebooks
         };
         const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
@@ -2348,6 +2406,12 @@
                 editHistory = loadedHistory;
                 if (parsed.siteAnnouncement) {
                     siteAnnouncement = parsed.siteAnnouncement;
+                    if (!siteAnnouncement.images) siteAnnouncement.images = [];
+                    const migrated = extractImagesFromAnnouncementContent(siteAnnouncement.content || '');
+                    if (migrated.images.length > 0) {
+                        siteAnnouncement.content = migrated.text;
+                        siteAnnouncement.images = [...siteAnnouncement.images, ...migrated.images];
+                    }
                     await setDBValue("site_announcement", siteAnnouncement);
                 }
 
