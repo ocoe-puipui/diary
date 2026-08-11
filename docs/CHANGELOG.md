@@ -17,6 +17,7 @@
 - 縦書き/横書きに応じた日英UI切り替えを全体に適用
 - お知らせの画像挿入を、日記本文と同様のbase64埋め込み方式(最大3枚、専用ボタン)に変更
 - 公開ページ(閲覧専用デモモード)にもINDEXのページ送り・まとめて表示(feed)モードを適用し、規定値(表示件数5・feed)で表示するよう対応
+- 公開用データ(`public_entries.json`)の管理場所を、コード用リポジトリ(`diary`)から専用のコンテンツ用リポジトリ(`diary-content`)に分離。フォーク時に個人データが同梱されないよう`index.html`のfetch先をRaw URL参照に変更し、`.gitignore`から`!public_entries.json`の例外を削除
 - UIレイアウトを「INDEX系」「SETTING系」「THEME/DIRECTION/FONT SIZE/表示モード」の3グループに整理
 - MITライセンスの追加、READMEの利用者向け整備
 

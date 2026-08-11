@@ -1120,7 +1120,10 @@
 
         let announcement = null;
         try {
-            const res = await fetch('public_entries.json', { cache: 'no-store' });
+            // 公開デモデータは、コード(このリポジトリ)とは別の diary-content リポジトリで管理する。
+            // アプリ本体をフォーク・ダウンロードした人に、puipui個人のデータが同梱されないようにするため。
+            const PUBLIC_CONTENT_URL = 'https://raw.githubusercontent.com/ocoe-puipui/diary-content/main/public_entries.json';
+            const res = await fetch(PUBLIC_CONTENT_URL, { cache: 'no-store' });
             if (res.ok) {
                 const data = await res.json();
                 notebooks = data.notebooks || [];

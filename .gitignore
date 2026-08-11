@@ -1,11 +1,7 @@
 # 個人の日記データファイルをすべて除外する
+# 公開用データ(public_entries.json)は別リポジトリ(diary-content)で管理するため、
+# このリポジトリではJSONファイルを一切コミットしない
 *.json
-
-# 公開用の日記データ(public_entries.json)だけはGitHubで公開したいので例外にする
-!public_entries.json
-
-# もしサンプル用のJSONだけはGitHubで公開したい（みんなに見せたい）場合は、以下のように例外を指定できます
-!sample_diary.json
 
 # 開発用ドキュメント(設計シート・タスクリスト・チェンジログ)はGitHubへアップロードしない
 docs/

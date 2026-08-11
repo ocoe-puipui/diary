@@ -102,17 +102,21 @@
 
 ## 5. 公開の仕組み
 
-### 5.1 データの分離
+### 5.1 データの分離(3層構造)
 
-個人日記(IndexedDB)と公開データ(`public_entries.json`)は完全に分離されている。GitHubにpushされるのはコードと`public_entries.json`のみで、個人の全データが晒されることはない。
+1. 個人日記(IndexedDB) … ブラウザ内のみ、Gitには一切乗らない
+2. コード用リポジトリ(`ocoe-puipui/diary`) … `index.html`本体のみ。MITライセンスでフォーク対象
+3. コンテンツ用リポジトリ(`ocoe-puipui/diary-content`) … 公開してよい`public_entries.json`のみを管理
+
+コード用リポジトリと個人の公開コンテンツを別リポジトリに分離しているのは、コードをフォーク・ダウンロードした人にpuipui個人の日記内容が同梱されないようにするため。`index.html`は`initReadOnlyDemo()`内の`PUBLIC_CONTENT_URL`定数で、コンテンツ用リポジトリのRaw URL(`https://raw.githubusercontent.com/ocoe-puipui/diary-content/main/public_entries.json`)からデータを取得する。
 
 ### 5.2 公開までの運用フロー
 
 1. ローカルで日記を書く/編集する
 2. 公開したいエントリに公開マーク(🌐)を付ける、または「お知らせ」を編集・公開設定にする
 3. Managementの「export public entries」で`public_entries.json`を書き出す
-4. `diary/public_entries.json`に配置し、`git add` → `git commit` → `git push`
-5. GitHub Pages反映後、公開URLで表示を確認
+4. コンテンツ用リポジトリ(`diary-content`)側に配置し、`git add` → `git commit` → `git push`(コード用リポジトリ`diary`にはコミットしない)
+5. GitHub Pages反映後、公開URL(`https://ocoe-puipui.github.io/diary/`)で表示を確認
 
 ### 5.3 閲覧専用デモモード
 
