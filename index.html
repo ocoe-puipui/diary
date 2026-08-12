@@ -2129,6 +2129,10 @@
             <form id="announcementForm" onsubmit="saveAnnouncement(event)">
                 <div class="form-group">
                     <span class="editable-label">説明文(HTML)</span>
+                    <label class="file-input-label" style="margin-bottom:12px;">
+                        <span>HTMLファイルを読み込む</span>
+                        <input type="file" accept=".html,text/html" style="display:none;" onchange="handleAnnouncementHtmlFileSelect(this)">
+                    </label>
                     <textarea id="announcementContentInput" style="height:220px;">${siteAnnouncement.content || ''}</textarea>
                 </div>
                 <div class="form-group">
@@ -2163,6 +2167,29 @@
         renderAnnouncementImagesGrid();
     }
 
+    // 「説明文(HTML)」を毎回フォームへ手打ち・貼り付けする代わりに、
+    // 外部で用意したHTMLファイル(.html)を選択して、そのままテキストエリアへ読み込む。
+    // 既存の入力内容は上書きされるため、空でない場合は確認ダイアログを挟む。
+    function handleAnnouncementHtmlFileSelect(input) {
+        const file = input.files && input.files[0];
+        if (!file) return;
+        const textarea = document.getElementById('announcementContentInput');
+        if (textarea && textarea.value.trim() !== '') {
+            if (!confirm('現在入力されている説明文を、選択したファイルの内容で上書きします。よろしいですか？')) {
+                input.value = '';
+                return;
+            }
+        }
+        const reader = new FileReader();
+        reader.onload = () => {
+            if (textarea) textarea.value = reader.result;
+        };
+        reader.onerror = () => {
+            alert('ファイルの読み込みに失敗しました。');
+        };
+        reader.readAsText(file, 'UTF-8');
+        input.value = '';
+    }
     // お知らせの画像は本文(HTML)とは別の配列で管理する(日記の画像添付と同じ方式)。
     // 本文のテキストエリアに巨大なbase64文字列が入らないため、編集画面を開いても固まらない。
     function handleAnnouncementImageSelect(input) {
