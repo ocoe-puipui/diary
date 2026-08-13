@@ -1657,6 +1657,15 @@
         notebooks.forEach(nb => {
             const btn = document.createElement('button');
             btn.className = `notebook-tab ${nb.id === currentNotebookId ? 'active' : ''}`;
+            // 右クリック(長押し)でも名前変更・削除メニューを開けるようにする。
+            // 名前が長いタブでは📔アイコンが見切れて押せなくなることがあるための代替手段。
+            btn.oncontextmenu = (e) => { e.preventDefault(); manageNotebookPrompt(nb.id); };
+
+            const renameBtn = document.createElement('span');
+            renameBtn.className = 'notebook-tab-rename-btn';
+            renameBtn.innerHTML = '📔';
+            renameBtn.onclick = (e) => { e.stopPropagation(); manageNotebookPrompt(nb.id); };
+            btn.appendChild(renameBtn);
 
             const textSpan = document.createElement('span');
             textSpan.className = 'notebook-tab-text';
@@ -1664,11 +1673,6 @@
             textSpan.onclick = () => switchNotebook(nb.id);
             btn.appendChild(textSpan);
 
-            const renameBtn = document.createElement('span');
-            renameBtn.className = 'notebook-tab-rename-btn';
-            renameBtn.innerHTML = '📔';
-            renameBtn.onclick = (e) => { e.stopPropagation(); manageNotebookPrompt(nb.id); };
-            btn.appendChild(renameBtn);
             container.appendChild(btn);
         });
 
