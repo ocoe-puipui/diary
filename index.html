@@ -17,6 +17,10 @@
             --text-muted: #555555;        /* 薄すぎない、しっかり読めるグレー */
             --border-color: #b0a99f;      /* 枠線を太く・濃くして境界を明瞭に */
             --danger-color: #c0392b;      /* 落ち着いたワインレッド */
+            --card-bg: #faf9f6;
+            --card-bg-hover: #ffffff;
+            --calendar-hover-bg: #eae6db;
+            --on-text-main: #ffffff;
 
             /* 初期値（Classic Gold） */
             --bg-color: #fcfbf9;
@@ -84,22 +88,22 @@
             width: 140px;
         }
         .notebook-tab:hover {
-            background-color: #f5f3ef;
+            background-color: var(--card-bg);
             color: var(--text-main);
         }
         .notebook-tab.active {
-            background-color: #fff;
+            background-color: var(--card-bg-hover);
             color: var(--text-main);
             font-weight: 800;
             box-shadow: inset 0 -4px 0 var(--accent-color);
         }
         .notebook-tab-add {
-            background-color: #f5f3ef;
+            background-color: var(--card-bg);
             color: var(--text-main);
             justify-content: center;
         }
         .notebook-tab-add:hover {
-            background-color: #e5e2db;
+            background-color: var(--card-bg-hover);
         }
         .notebook-tab-text {
             white-space: nowrap;
@@ -116,6 +120,53 @@
             width: auto;
             cursor: pointer;
             flex-shrink: 0;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+        }
+        .notebook-tab-rename-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+        /* アイコン(名前変更・削除メニューを開く部分)にカーソルを合わせた際、
+           押せる領域であることが分かるよう背景色をつけ、隣接するノート名にも下線を表示する */
+        .notebook-tab-rename-btn:hover {
+            background-color: rgba(0,0,0,0.08);
+        }
+        .notebook-tab-rename-btn:hover + .notebook-tab-text {
+            text-decoration: underline;
+        }
+
+        /* ノート名変更・削除用のモーダル */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0,0,0,0.45);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .modal-box {
+            background-color: var(--panel-bg);
+            border-radius: 8px;
+            padding: 25px 30px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            box-sizing: border-box;
+        }
+        .modal-radio-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 0;
+            cursor: pointer;
+        }
+        .modal-radio-row input[type="radio"] {
+            width: auto;
         }
 
         /* 現在の日記帳名とテーマ設定エリア */
@@ -209,13 +260,74 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        .theme-selector-item-auto {
-            flex: 0 0 auto;
-        }
         .theme-selector-wrapper #viewModeToggleBtn {
-            width: auto;
             font-size: 0.85rem;
-            padding: 0 16px;
+            padding: 0 8px;
+        }
+
+        /* キーワード検索ボックス */
+        .search-box-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            height: 38px;
+            padding: 0 12px;
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--panel-bg);
+            box-sizing: border-box;
+        }
+        .search-box-item .search-box-icon {
+            display: inline-flex !important;
+            width: 16px;
+            height: 16px;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+        .search-box-icon svg { width: 100%; height: 100%; }
+        #searchInput {
+            border: none;
+            outline: none;
+            background: transparent;
+            width: 100%;
+            min-width: 0;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-main);
+            padding: 0;
+        }
+
+        /* ライト/ダークモード自動追従の切替ボタン */
+        .theme-selector-wrapper .icon-toggle-btn {
+            width: 100%;
+            height: 38px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: transparent;
+            color: var(--text-main);
+            border: 2px solid var(--border-color);
+            white-space: normal;
+        }
+        .icon-toggle-btn svg { width: 18px; height: 18px; }
+        .icon-toggle-btn.is-active {
+            color: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+        .icon-toggle-btn:hover { background-color: rgba(0,0,0,0.05); }
+
+        /* OSのダーク設定に自動追従した際の配色上書き(10色のカラーテーマとは独立、アクセント色は維持) */
+        body.force-dark-mode {
+            --bg-color: #16181a;
+            --panel-bg: #24272b;
+            --text-main: #e8e8e8;
+            --text-muted: #a3a3a3;
+            --border-color: #45494e;
+            --card-bg: #2c2f33;
+            --card-bg-hover: #35393e;
+            --calendar-hover-bg: #35393e;
+            --on-text-main: #16181a;
         }
 
         /* 全体コンテナ */
@@ -271,7 +383,7 @@
             margin-bottom: 20px;
             text-transform: uppercase;
         }
-        #indexHeader, #mgmtHeader {
+        #indexHeader, #mgmtHeader, #calendarHeader, #activityHeader {
             text-align: center;
         }
         /* SETTINGセクションの英語表記は小文字のまま表示する(他の見出しは大文字化する仕様のため個別に無効化) */
@@ -315,7 +427,7 @@
             padding: 12px;
             border: 2px solid var(--border-color);
             border-radius: 4px;
-            background-color: #faf9f6;
+            background-color: var(--card-bg);
             box-sizing: border-box;
             font-size: 1rem;
             font-weight: 600;
@@ -326,7 +438,7 @@
         input[type="text"]:focus, input[type="date"]:focus, select:focus, textarea:focus {
             outline: none;
             border-color: var(--accent-color);
-            background-color: #fff;
+            background-color: var(--card-bg-hover);
         }
 
         textarea { height: 180px; resize: vertical; line-height: 1.8; font-weight: 500; }
@@ -346,7 +458,7 @@
             border: 2px dashed var(--border-color);
             padding: 20px;
             text-align: center;
-            background-color: #faf9f6;
+            background-color: var(--card-bg);
             cursor: pointer;
             font-weight: 600;
             transition: border-color 0.2s;
@@ -367,7 +479,7 @@
         .form-image-item {
             display: flex;
             flex-direction: column;
-            background-color: #faf9f6;
+            background-color: var(--card-bg);
             border: 2px solid var(--border-color);
             border-radius: 4px;
             padding: 8px;
@@ -389,7 +501,7 @@
             margin-bottom: 30px;
         }
         .diary-view-image-wrapper {
-            background-color: #faf9f6;
+            background-color: var(--card-bg);
             padding: 15px;
             border: 2px solid var(--border-color);
             text-align: center;
@@ -434,14 +546,14 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        .backup-btn:hover { background-color: #faf9f6; }
+        .backup-btn:hover { background-color: var(--card-bg); }
         #mgmtActions .backup-btn {
             font-size: 0.78rem;
             padding: 10px 8px;
         }
         
-        .new-post-btn { background-color: var(--text-main); margin-bottom: 25px; font-size: 1rem;}
-        .new-post-btn:hover { background-color: #000000; }
+        .new-post-btn { background-color: var(--text-main); color: var(--on-text-main); margin-bottom: 25px; font-size: 1rem;}
+        .new-post-btn:hover { background-color: #000000; color: #ffffff; }
         
         .file-input-label {
             display: block;
@@ -457,7 +569,7 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        .file-input-label:hover { background-color: #faf9f6; }
+        .file-input-label:hover { background-color: var(--card-bg); }
         #mgmtActions .file-input-label {
             font-size: 0.78rem;
             padding: 10px 8px;
@@ -553,7 +665,7 @@
 
         .index-item, .history-item {
             padding: 12px 14px;
-            background-color: #faf9f6;
+            background-color: var(--card-bg);
             border: 2px solid var(--border-color);
             border-radius: 6px;
             cursor: pointer;
@@ -564,7 +676,7 @@
             box-sizing: border-box;
         }
         .index-item:hover, .index-item.active, .history-item:hover {
-            background-color: #ffffff;
+            background-color: var(--card-bg-hover);
             border-color: var(--accent-color);
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
             transform: translateY(-1px);
@@ -643,6 +755,9 @@
             margin: -5px 0 15px 0;
             padding-bottom: 2px;
         }
+        .diary-view-title.vertical {
+            text-align: center;
+        }
 
         .diary-view-header {
             display: flex;
@@ -692,10 +807,13 @@
             border-top: 2px solid var(--border-color);
             padding-top: 20px;
         }
-        .delete-btn { background-color: transparent; color: var(--text-muted); border: 2px solid var(--border-color); padding: 8px 16px; font-size: 0.85rem; font-weight: 600; width: auto; }
+        .delete-btn { background-color: transparent; color: var(--text-muted); border: 2px solid var(--border-color); padding: 8px 16px; font-size: 0.85rem; font-weight: 600; width: auto; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
         .delete-btn:hover { background-color: #fff1f0; color: var(--danger-color); border-color: var(--danger-color); }
-        .edit-entry-btn { background-color: transparent; color: var(--accent-color); border: 2px solid var(--accent-color); padding: 8px 16px; font-size: 0.85rem; font-weight: 700; width: auto; }
+        .edit-entry-btn { background-color: transparent; color: var(--accent-color); border: 2px solid var(--accent-color); padding: 8px 16px; font-size: 0.85rem; font-weight: 700; width: auto; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
         .edit-entry-btn:hover { background-color: var(--accent-color); color: white; }
+        .edit-entry-btn svg, .delete-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+        .history-notebook-name svg { width: 14px; height: 14px; vertical-align: -2px; margin-right: 3px; }
+        .diary-view-header svg { width: 16px; height: 16px; vertical-align: -3px; margin-right: 4px; }
 
         /* カレンダー */
         .calendar-header {
@@ -731,7 +849,7 @@
             font-size: 0.85rem;
             font-weight: 700;
         }
-        .calendar-nav-btn:hover { background-color: #faf9f6; }
+        .calendar-nav-btn:hover { background-color: var(--card-bg); }
         
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
         .calendar-day-label {
@@ -756,10 +874,10 @@
             transition: all 0.2s;
         }
         .calendar-cell.current-month:hover {
-            background-color: #eae6db;
+            background-color: var(--calendar-hover-bg);
         }
         .calendar-cell.has-diary {
-            background-color: #ffffff;
+            background-color: var(--card-bg-hover);
             color: var(--accent-color);
             font-weight: 800;
             border: 2px solid var(--accent-color);
@@ -770,7 +888,7 @@
         }
         .calendar-cell.is-active {
             background-color: var(--text-main) !important;
-            color: white !important;
+            color: var(--on-text-main) !important;
             border-color: var(--text-main) !important;
         }
 
@@ -792,12 +910,14 @@
         }
         .calendar-today-btn:hover {
             background-color: var(--text-main);
-            color: #ffffff;
+            color: var(--on-text-main);
             border-color: var(--text-main);
         }
     </style>
 </head>
 <body class="theme-classic" id="appBody">
+
+<div class="modal-overlay" id="notebookManageModalOverlay" style="display:none;" onclick="if(event.target===this) closeNotebookManageModal()"></div>
 
 <div class="notebook-tabs-container">
     <div class="notebook-tabs" id="notebookTabs"></div>
@@ -839,8 +959,15 @@
             <option value="large">大 / Large</option>
         </select>
     </div>
-    <div class="theme-selector-item theme-selector-item-auto">
+    <div class="theme-selector-item">
         <button class="backup-btn" id="viewModeToggleBtn" onclick="toggleMainViewMode()">まとめて表示</button>
+    </div>
+    <div class="theme-selector-item search-box-item">
+        <span class="search-box-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor"><path d="M796-121 533-384q-30 26-70 40.5T378-329q-108 0-183-75t-75-181q0-106 75-181t182-75q106 0 180.5 75T632-585q0 43-14 83t-42 75l264 262-44 44ZM377-389q81 0 138-57.5T572-585q0-81-57-138.5T377-781q-82 0-139.5 57.5T180-585q0 81 57.5 138.5T377-389Z"/></svg></span>
+        <input type="text" id="searchInput" placeholder="検索" oninput="onSearchInput(this.value)">
+    </div>
+    <div class="theme-selector-item">
+        <button class="icon-toggle-btn" id="darkModeToggleBtn" onclick="toggleAutoDarkMode()"></button>
     </div>
 </div>
 
@@ -1004,6 +1131,22 @@
     const ICON_PUBLIC_ON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M324-111.5Q251-143 197-197t-85.5-127Q80-397 80-480t31.5-156Q143-709 197-763t127-85.5Q397-880 480-880t156 31.5Q709-817 763-763t85.5 127Q880-563 880-480t-31.5 156Q817-251 763-197t-127 85.5Q563-80 480-80t-156-31.5ZM437-141v-82q-35 0-59-26t-24-61v-44L149-559q-5 20-7 39.5t-2 39.5q0 130 84.5 227T437-141Zm294-108q44-48 66.5-107.5T820-480q0-106-58-192.5T607-799v18q0 35-24 61t-59 26h-87v87q0 17-13.5 28T393-568h-83v88h258q17 0 28 13t11 30v127h43q29 0 51 17t30 44Z"/></svg>';
     const ICON_PUBLIC_OFF = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M833-41 717-157q-50 37-110 57T480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-67 20-127t57-110L26-848l43-43L876-84l-43 43ZM437-141v-82q-35 0-59-26t-24-61v-44L149-559q-5 20-7 39.5t-2 39.5q0 130 84.5 227T437-141Zm366-102-43-43q29-43 44.5-92.5T820-480q0-106-58-192.5T607-799v18q0 35-24 61t-59 26h-87v85L243-803q50-37 110-57t127-20q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 67-20 127t-57 110Z"/></svg>';
 
+    // ノートタブの状態アイコン(選択中/非選択)。fill="currentColor" にしてCSS側の color で色を制御する。
+    const ICON_BOOK_OPEN = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor"><path d="M560-574v-48q33-14 67.5-21t72.5-7q26 0 51 4t49 10v44q-24-9-48.5-13.5T700-610q-38 0-73 9.5T560-574Zm0 220v-49q33-13.5 67.5-20.25T700-430q26 0 51 4t49 10v44q-24-9-48.5-13.5T700-390q-38 0-73 9t-67 27Zm0-110v-48q33-14 67.5-21t72.5-7q26 0 51 4t49 10v44q-24-9-48.5-13.5T700-500q-38 0-73 9.5T560-464ZM248-300q53.57 0 104.28 12.5Q403-275 452-250v-427q-45-30-97.62-46.5Q301.76-740 248-740q-38 0-74.5 9.5T100-707v434q31-14 70.5-20.5T248-300Zm264 50q50-25 98-37.5T712-300q38 0 78.5 6t69.5 16v-429q-34-17-71.82-25-37.82-8-76.18-8-54 0-104.5 16.5T512-677v427Zm-30 90q-51-38-111-58.5T248-239q-36.54 0-71.77 9T106-208q-23.1 11-44.55-3Q40-225 40-251v-463q0-15 7-27.5T68-761q42-20 87.39-29.5 45.4-9.5 92.61-9.5 63 0 122.5 17T482-731q51-35 109.5-52T712-800q46.87 0 91.93 9.5Q849-781 891-761q14 7 21.5 19.5T920-714v463q0 27.89-22.5 42.45Q875-194 853-208q-34-14-69.23-22.5Q748.54-239 712-239q-63 0-121 21t-109 58ZM276-489Z"/></svg>';
+    const ICON_BOOK_CLOSED = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor"><path d="M290-80q-53.86 0-91.93-38.07Q160-156.14 160-210v-540q0-53.86 38.07-91.93Q236.14-880 290-880h510v600q-26 0-43 21t-17 49q0 28 17 49t43 21v60H290Zm-70-240q15-10 32.5-15t37.5-5h30v-480h-30q-29.17 0-49.58 20.42Q220-779.17 220-750v430Zm160-20h360v-480H380v480Zm-160 20v-500 500Zm69.54 180H699q-9-15-14-33t-5-37q0-20 5-37.5t15-32.5H289.61q-28.61 0-49.11 20.42Q220-239.17 220-210q0 29 20.5 49.5t49.04 20.5Z"/></svg>';
+
+    // 検索アイコン・ライト/ダークモード切替アイコン。fill="currentColor" にしてCSS側の color で色を制御する。
+    const ICON_SEARCH = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor"><path d="M796-121 533-384q-30 26-70 40.5T378-329q-108 0-183-75t-75-181q0-106 75-181t182-75q106 0 180.5 75T632-585q0 43-14 83t-42 75l264 262-44 44ZM377-389q81 0 138-57.5T572-585q0-81-57-138.5T377-781q-82 0-139.5 57.5T180-585q0 81 57.5 138.5T377-389Z"/></svg>';
+    const ICON_LIGHT_MODE = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor"><path d="M579-381q41-41 41-99t-41-99q-41-41-99-41t-99 41q-41 41-41 99t41 99q41 41 99 41t99-41Zm-240.5 42.5Q280-397 280-480t58.5-141.5Q397-680 480-680t141.5 58.5Q680-563 680-480t-58.5 141.5Q563-280 480-280t-141.5-58.5ZM200-450H40v-60h160v60Zm720 0H760v-60h160v60ZM450-760v-160h60v160h-60Zm0 720v-160h60v160h-60ZM262-658l-100-97 43-44 96 100-39 41Zm494 496-98-100 41-41 99 98-42 43Zm-99-537 98-99 44 42-99 98-43-41ZM162-205l99-98 42 42-98 99-43-43Zm318-275Z"/></svg>';
+    const ICON_DARK_MODE = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor"><path d="M480-120q-150 0-255-105T120-480q0-150 105-255t255-105q8 0 17 .5t23 1.5q-36 32-56 79t-20 99q0 90 63 153t153 63q52 0 99-18.5t79-51.5q1 12 1.5 19.5t.5 14.5q0 150-105 255T480-120Zm0-60q109 0 190-67.5T771-406q-25 11-53.67 16.5Q688.67-384 660-384q-114.69 0-195.34-80.66Q384-545.31 384-660q0-24 5-51.5t18-62.5q-98 27-162.5 109.5T180-480q0 125 87.5 212.5T480-180Zm-4-297Z"/></svg>';
+    const ICON_AUTO_MODE = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor"><path d="M440-190q59 0 110.5-27.5T641-290q-129-8-220-95.5T330-600q0-17 2.5-34.5T338-669q-65 36-106.5 96T190-440q0 104.17 72.92 177.08Q335.83-190 440-190Zm0 60q-129 0-219.5-90.5T130-440q0-129 90.5-219.5T440-750q-26 32-38 70.5T390-600q0 104.17 72.92 177.08Q535.83-350 640-350q26 0 52-5.5t50-16.5q-24 106-108.5 174T440-130Zm118-394 125.54-356H762l126 356h-72l-28.3-80H658.3L630-524h-72Zm116-130h98l-49-155-49 155ZM421-387Z"/></svg>';
+
+    // 編集・削除ボタン、履歴(Recent Activity)のノート名アイコン。fill="currentColor" にしてCSS側の color で色を制御する。
+    const ICON_EDIT = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor"><path d="M180-180h44l472-471-44-44-472 471v44Zm-60 60v-128l575-574q8-8 19-12.5t23-4.5q11 0 22 4.5t20 12.5l44 44q9 9 13 20t4 22q0 11-4.5 22.5T823-694L248-120H120Zm659-617-41-41 41 41Zm-105 64-22-22 44 44-22-22Z"/></svg>';
+    const ICON_DELETE = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor"><path d="M261-120q-24.75 0-42.37-17.63Q201-155.25 201-180v-570h-41v-60h188v-30h264v30h188v60h-41v570q0 24-18 42t-42 18H261Zm438-630H261v570h438v-570ZM367-266h60v-399h-60v399Zm166 0h60v-399h-60v399ZM261-750v570-570Z"/></svg>';
+    const ICON_ARTICLE = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor"><path d="M277-279h275v-60H277v60Zm0-171h406v-60H277v60Zm0-171h406v-60H277v60Zm-97 501q-24 0-42-18t-18-42v-600q0-24 18-42t42-18h600q24 0 42 18t18 42v600q0 24-18 42t-42 18H180Zm0-60h600v-600H180v600Zm0-600v600-600Z"/></svg>';
+    const ICON_CALENDAR = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor"><path d="M180-80q-24 0-42-18t-18-42v-620q0-24 18-42t42-18h65v-60h65v60h340v-60h65v60h65q24 0 42 18t18 42v620q0 24-18 42t-42 18H180Zm0-60h600v-430H180v430Zm0-490h600v-130H180v130Zm0 0v-130 130Zm300 230q-17 0-28.5-11.5T440-440q0-17 11.5-28.5T480-480q17 0 28.5 11.5T520-440q0 17-11.5 28.5T480-400Zm-188.5-11.5Q280-423 280-440t11.5-28.5Q303-480 320-480t28.5 11.5Q360-457 360-440t-11.5 28.5Q337-400 320-400t-28.5-11.5ZM640-400q-17 0-28.5-11.5T600-440q0-17 11.5-28.5T640-480q17 0 28.5 11.5T680-440q0 17-11.5 28.5T640-400ZM480-240q-17 0-28.5-11.5T440-280q0-17 11.5-28.5T480-320q17 0 28.5 11.5T520-280q0 17-11.5 28.5T480-240Zm-188.5-11.5Q280-263 280-280t11.5-28.5Q303-320 320-320t28.5 11.5Q360-297 360-280t-11.5 28.5Q337-240 320-240t-28.5-11.5ZM640-240q-17 0-28.5-11.5T600-280q0-17 11.5-28.5T640-320q17 0 28.5 11.5T680-280q0 17-11.5 28.5T640-240Z"/></svg>';
+
     // --- アプリケーション変数群 ---
     let notebooks = [];
     let currentNotebookId = 'nb_default';
@@ -1040,6 +1183,55 @@
         }
         return `${galleryHtml}${announcement.content || ''}`;
     }
+    let searchKeyword = '';
+    // 'auto'(OSに追従) | 'dark'(常にダーク) | 'light'(常にライト)
+    let darkModeSetting = 'auto';
+    const darkModeMedia = (typeof window !== 'undefined' && window.matchMedia) ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+
+    // タイトル・本文をキーワードで絞り込む(INDEX一覧・まとめて表示の両方で使用)
+    function getSearchFilteredEntries(entries) {
+        if (!searchKeyword) return entries;
+        return entries.filter(e => (e.title || '').toLowerCase().includes(searchKeyword) || (e.content || '').toLowerCase().includes(searchKeyword));
+    }
+
+    function onSearchInput(value) {
+        searchKeyword = value.trim().toLowerCase();
+        indexPageOffset = 0;
+        refreshSidebar();
+        if (mainViewMode === 'feed') renderEntryFeed();
+    }
+
+    // 現在ダーク配色を表示すべきかどうかを判定する('auto'の場合はOSの設定に従う)
+    function shouldShowDark() {
+        if (darkModeSetting === 'dark') return true;
+        if (darkModeSetting === 'light') return false;
+        return !!(darkModeMedia && darkModeMedia.matches);
+    }
+
+    // ダーク/ライト/オートの表示モード。10色のカラーテーマとは独立して、
+    // 背景・文字色だけをダーク配色に上書きする(アクセントカラーは選択中のテーマのまま)。
+    function applyAutoDarkMode() {
+        document.body.classList.toggle('force-dark-mode', shouldShowDark());
+        updateDarkModeBtnIcon();
+    }
+
+    function updateDarkModeBtnIcon() {
+        const btn = document.getElementById('darkModeToggleBtn');
+        if (!btn) return;
+        const iconMap = { dark: ICON_DARK_MODE, light: ICON_LIGHT_MODE, auto: ICON_AUTO_MODE };
+        const labelMap = { dark: 'ダーク固定', light: 'ライト固定', auto: `オート(現在: ${shouldShowDark() ? 'ダーク' : 'ライト'})` };
+        btn.innerHTML = iconMap[darkModeSetting];
+        btn.classList.toggle('is-active', shouldShowDark());
+        btn.title = `外観モード: ${labelMap[darkModeSetting]}(クリックで切替)`;
+    }
+
+    // クリックのたびに オート → ダーク → ライト → オート... の順に切り替える
+    async function toggleAutoDarkMode() {
+        darkModeSetting = (darkModeSetting === 'auto') ? 'dark' : (darkModeSetting === 'dark') ? 'light' : 'auto';
+        await setDBValue('dark_mode_setting', darkModeSetting);
+        applyAutoDarkMode();
+    }
+
     let indexPageSize = 5;
     let indexPageOffset = 0;
     let mainViewMode = 'feed'; // 'single'(1件詳細表示) または 'feed'(ページ単位でまとめて表示)
@@ -1121,14 +1313,18 @@
             });
         });
 
+        darkModeSetting = await getDBValue("dark_mode_setting", 'auto');
+        if (darkModeMedia && darkModeMedia.addEventListener) darkModeMedia.addEventListener('change', applyAutoDarkMode);
+
         const nb = getCurrentNotebook();
         updateLabels(nb ? nb.isVertical : false);
 
         renderTabs();
         updateNotebookHeader();
+        applyAutoDarkMode();
         refreshSidebar();
         renderHistory();
-        
+
         const currentEntries = getCurrentEntries();
         if (currentEntries.length > 0) {
             viewDiary(currentEntries[0].id);
@@ -1302,9 +1498,9 @@
             }
             html += `
                 <div class="feed-entry-block">
-                    ${entry.title ? `<div class="diary-view-title">${entry.title}</div>` : ''}
+                    ${entry.title ? `<div class="diary-view-title ${nb && nb.isVertical ? 'vertical' : ''}">${entry.title}</div>` : ''}
                     <div class="diary-view-header ${nb && nb.isVertical ? 'vertical' : ''}">
-                        <div>🗓️ ${formatJapaneseDate(entry.date)}</div>
+                        <div>${ICON_CALENDAR} ${formatJapaneseDate(entry.date)}</div>
                         ${entry.weather ? `<div>${entry.weather}</div>` : ''}
                     </div>
                     ${galleryHtml}
@@ -1401,7 +1597,7 @@
             const li = document.createElement('li');
             li.className = 'history-item';
             li.innerHTML = `
-                <div class="history-row-top"><span class="history-notebook-name">📔 ${nb.name}</span><span>${formatSlashDate(entry.date)}</span></div>
+                <div class="history-row-top"><span class="history-notebook-name">${ICON_ARTICLE} ${nb.name}</span><span>${formatSlashDate(entry.date)}</span></div>
                 <div class="history-row-bottom ${!entry.title ? 'empty-title' : ''}" title="${entry.title || '(no title)'}">${entry.title || '(no title)'}</div>
             `;
             li.onclick = () => viewDemoEntry(entry.id);
@@ -1431,9 +1627,9 @@
         const fontSizeClass = `fontsize-${(nb && nb.fontSize) || 'medium'}`;
         document.getElementById('mainPanel').innerHTML = `
             <div class="entry-view-wrapper ${fontSizeClass}">
-                ${entry.title ? `<div class="diary-view-title">${entry.title}</div>` : ''}
+                ${entry.title ? `<div class="diary-view-title ${nb && nb.isVertical ? 'vertical' : ''}">${entry.title}</div>` : ''}
                 <div class="diary-view-header ${nb && nb.isVertical ? 'vertical' : ''}">
-                    <div>🗓️ ${formatJapaneseDate(entry.date)}</div>
+                    <div>${ICON_CALENDAR} ${formatJapaneseDate(entry.date)}</div>
                     ${entry.weather ? `<div>${entry.weather}</div>` : ''}
                 </div>
                 ${galleryHtml}
@@ -1480,7 +1676,7 @@
                 'btn-cancel': 'キャンセル', 'text-loading-form': '⏳ フォームの準備中です。少々お待ちください。', 'text-loading-edit': '⏳ 日記データを読み込んでいます。少々お待ちください。',
                 'lbl-color-theme': '配色テーマ', 'lbl-writing-direction': '文字方向', 'lbl-font-size': '文字の大きさ',
                 'btn-export': 'データを書き出す', 'btn-import': 'データを読み込む',
-                'btn-edit-entry': '✏️ 日記を編集する', 'btn-delete': '🗑️ 削除する', 'btn-today': '今日',
+                'btn-edit-entry': `${ICON_EDIT}<span>日記を編集する</span>`, 'btn-delete': `${ICON_DELETE}<span>削除する</span>`, 'btn-today': '今日',
                 'lbl-public': 'この日記を公開する', 'btn-export-public': '公開用データを書き出す',
                 'btn-export-notebook': 'このノートを書き出す', 'btn-import-notebook': 'ノートを読み込む',
                 'btn-announcement': 'お知らせを編集する', 'btn-add-notebook': '＋ 日記を追加',
@@ -1499,13 +1695,13 @@
                 'btn-cancel': 'Cancel', 'text-loading-form': '⏳ Loading... Please wait.', 'text-loading-edit': '⏳ Loading... Please wait.',
                 'lbl-color-theme': 'THEME', 'lbl-writing-direction': 'DIRECTION', 'lbl-font-size': 'FONT SIZE',
                 'btn-export': 'export all', 'btn-import': 'import all',
-                'btn-edit-entry': '✏️ Edit Entry', 'btn-delete': '🗑️ Delete', 'btn-today': 'Today',
+                'btn-edit-entry': `${ICON_EDIT}<span>Edit Entry</span>`, 'btn-delete': `${ICON_DELETE}<span>Delete</span>`, 'btn-today': 'Today',
                 'lbl-public': 'publish this entry', 'btn-export-public': 'export public',
                 'btn-export-notebook': 'export notebook', 'btn-import-notebook': 'import notebook',
                 'btn-announcement': 'announcement', 'btn-add-notebook': '＋ADD',
                 'font-small': 'Small', 'font-medium': 'Medium', 'font-large': 'Large',
                 'btn-prev-page': 'Previous', 'btn-next-page': 'Next', 'lbl-page-size': 'SHOW',
-                'btn-view-feed': 'FEED VIEW まとめて表示', 'btn-view-single': 'SINGLE VIEW 個別表示'
+                'btn-view-feed': 'FEED まとめて表示', 'btn-view-single': 'SINGLE 個別表示'
             };
         }
 
@@ -1611,6 +1807,8 @@
         const body = document.getElementById('appBody');
         body.className = '';
         body.classList.add(themeName || 'theme-classic');
+        // applyTheme はbody.classNameを丸ごとリセットするため、ダーク表示の上書きクラスも都度re-applyする
+        body.classList.toggle('force-dark-mode', shouldShowDark());
     }
 
     function renderHistory() {
@@ -1629,7 +1827,7 @@
             const li = document.createElement('li');
             li.className = 'history-item';
             li.innerHTML = `
-                <div class="history-row-top"><span class="history-notebook-name">📔 ${h.notebookName}</span><span>${formatSlashDate(h.entryDate)}</span></div>
+                <div class="history-row-top"><span class="history-notebook-name">${ICON_ARTICLE} ${h.notebookName}</span><span>${formatSlashDate(h.entryDate)}</span></div>
                 <div class="history-row-bottom ${!h.entryTitle ? 'empty-title' : ''}" title="${h.entryTitle || labels['text-empty-title']}">${h.entryTitle || labels['text-empty-title']}</div>
             `;
             li.onclick = () => jumpToDiary(h.notebookId, h.entryId);
@@ -1663,7 +1861,8 @@
 
             const renameBtn = document.createElement('span');
             renameBtn.className = 'notebook-tab-rename-btn';
-            renameBtn.innerHTML = '📔';
+            renameBtn.title = '名前の変更・削除';
+            renameBtn.innerHTML = (nb.id === currentNotebookId) ? ICON_BOOK_OPEN : ICON_BOOK_CLOSED;
             renameBtn.onclick = (e) => { e.stopPropagation(); manageNotebookPrompt(nb.id); };
             btn.appendChild(renameBtn);
 
@@ -1679,7 +1878,7 @@
         const addBtn = document.createElement('button');
         addBtn.className = 'notebook-tab notebook-tab-add';
         addBtn.innerText = (labels && labels['btn-add-notebook']) || '＋ 日記を追加';
-        addBtn.onclick = addNotebook;
+        addBtn.onclick = showAddNotebookModal;
         container.appendChild(addBtn);
     }
 
@@ -1699,35 +1898,105 @@
         else showNewForm();
     }
 
-    function addNotebook() {
-        const name = prompt("新しい日記の名前を入力してください:\nEnter a name for the new diary:", `日記${notebooks.length + 1}`);
-        if (!name || name.trim() === "") return;
+    // 新しいノート(日記)の追加。以前はprompt()で名前入力させていたが、
+    // 名前変更・削除メニューと統一感のある独自モーダル(入力欄+OK/キャンセル)に置き換えた。
+    function showAddNotebookModal() {
+        const overlay = document.getElementById('notebookManageModalOverlay');
+        const defaultName = `日記${notebooks.length + 1}`;
+        overlay.innerHTML = `
+            <div class="modal-box">
+                <h3 style="margin-top:0;">新しい日記を追加</h3>
+                <form onsubmit="submitAddNotebookModal(event)">
+                    <input type="text" id="nbAddNameInput" value="${defaultName}" style="width:100%; box-sizing:border-box;">
+                    <div class="action-buttons" style="border:none; padding:0; margin-top:20px;">
+                        <button type="submit">OK</button>
+                        <button type="button" class="delete-btn" style="padding:12px 20px;" onclick="closeNotebookManageModal()">キャンセル</button>
+                    </div>
+                </form>
+            </div>
+        `;
+        overlay.style.display = 'flex';
+        const input = document.getElementById('nbAddNameInput');
+        input.focus();
+        input.select();
+    }
+
+    function submitAddNotebookModal(e) {
+        e.preventDefault();
+        const name = document.getElementById('nbAddNameInput').value.trim();
+        closeNotebookManageModal();
+        if (name === '') return;
         const newId = 'nb_' + Date.now();
-        notebooks.push({ id: newId, name: name.trim(), theme: 'theme-classic', isVertical: false, entries: [] });
+        notebooks.push({ id: newId, name: name, theme: 'theme-classic', isVertical: false, entries: [] });
         currentNotebookId = newId;
         saveAllData();
         switchNotebook(newId);
     }
 
+    // ノートの名前変更・削除メニュー。以前はprompt()で番号入力させていたが、
+    // ラジオボタン選択+OK/キャンセルの独自モーダルに置き換えた。
     function manageNotebookPrompt(id) {
         const nb = notebooks.find(n => n.id === id);
         if (!nb) return;
-        const action = prompt(`【${nb.name}】の管理 / Manage "${nb.name}"\n\n1: 名前を変更する / Rename\n2: この日記帳を丸ごと削除する / Delete this diary\n\n番号を入力してください / Enter a number:`, "1");
-        if (action === "1") {
-            const newName = prompt("新しい日記の名前を入力してください:\nEnter a new name for this diary:", nb.name);
-            if (newName && newName.trim() !== "") {
-                nb.name = newName.trim();
+        const overlay = document.getElementById('notebookManageModalOverlay');
+        overlay.innerHTML = `
+            <div class="modal-box">
+                <h3 style="margin-top:0;">「${nb.name}」の管理</h3>
+                <form onsubmit="submitNotebookManageModal(event, '${id}')">
+                    <label class="modal-radio-row">
+                        <input type="radio" name="nbManageAction" value="rename" checked onchange="updateNotebookManageModal()">
+                        <span>名前を変更する</span>
+                    </label>
+                    <div id="nbManageRenameInputWrap" style="margin:10px 0 10px 28px;">
+                        <input type="text" id="nbManageRenameInput" value="${nb.name.replace(/"/g, '&quot;')}" style="width:100%; box-sizing:border-box;">
+                    </div>
+                    <label class="modal-radio-row">
+                        <input type="radio" name="nbManageAction" value="delete" ${notebooks.length <= 1 ? 'disabled' : ''} onchange="updateNotebookManageModal()">
+                        <span>この日記帳を丸ごと削除する${notebooks.length <= 1 ? '(最後の1冊は削除できません)' : ''}</span>
+                    </label>
+                    <div class="action-buttons" style="border:none; padding:0; margin-top:20px;">
+                        <button type="submit">OK</button>
+                        <button type="button" class="delete-btn" style="padding:12px 20px;" onclick="closeNotebookManageModal()">キャンセル</button>
+                    </div>
+                </form>
+            </div>
+        `;
+        overlay.style.display = 'flex';
+        document.getElementById('nbManageRenameInput').focus();
+    }
+
+    // ラジオボタンの選択状態に応じて、名前入力欄の表示/非表示を切り替える
+    function updateNotebookManageModal() {
+        const checked = document.querySelector('input[name="nbManageAction"]:checked');
+        const wrap = document.getElementById('nbManageRenameInputWrap');
+        if (wrap) wrap.style.display = (checked && checked.value === 'rename') ? 'block' : 'none';
+    }
+
+    function closeNotebookManageModal() {
+        const overlay = document.getElementById('notebookManageModalOverlay');
+        overlay.style.display = 'none';
+        overlay.innerHTML = '';
+    }
+
+    function submitNotebookManageModal(e, id) {
+        e.preventDefault();
+        const nb = notebooks.find(n => n.id === id);
+        if (!nb) { closeNotebookManageModal(); return; }
+        const action = document.querySelector('input[name="nbManageAction"]:checked').value;
+        if (action === 'rename') {
+            const newName = document.getElementById('nbManageRenameInput').value.trim();
+            if (newName !== '') {
+                nb.name = newName;
                 saveAllData(); renderTabs(); updateNotebookHeader(); renderHistory();
             }
-        } else if (action === "2") {
-            if (notebooks.length <= 1) { alert("これ以上日記帳を削除することはできません。\nYou cannot delete the last remaining diary."); return; }
-            if (confirm(`本当に「${nb.name}」を削除しますか？\nAre you sure you want to delete "${nb.name}"?`)) {
-                notebooks = notebooks.filter(n => n.id !== id);
-                if (currentNotebookId === id) currentNotebookId = notebooks[0].id;
-                editHistory = editHistory.filter(h => h.notebookId !== id);
-                saveAllData(); switchNotebook(currentNotebookId);
-            }
+        } else if (action === 'delete') {
+            if (notebooks.length <= 1) { alert("これ以上日記帳を削除することはできません。\nYou cannot delete the last remaining diary."); closeNotebookManageModal(); return; }
+            notebooks = notebooks.filter(n => n.id !== id);
+            if (currentNotebookId === id) currentNotebookId = notebooks[0].id;
+            editHistory = editHistory.filter(h => h.notebookId !== id);
+            saveAllData(); switchNotebook(currentNotebookId);
         }
+        closeNotebookManageModal();
     }
 
     function formatJapaneseDate(dateStr) {
@@ -1757,10 +2026,11 @@
     function refreshSidebar() {
         const indexList = document.getElementById('indexList');
         indexList.innerHTML = '';
-        const currentEntries = getCurrentEntries();
+        const currentEntries = getSearchFilteredEntries(getCurrentEntries());
 
         if (currentEntries.length === 0) {
-            indexList.innerHTML = `<li style="color:var(--text-muted);font-size:0.9rem;font-weight:600;padding:10px 0;text-align:center;">${labels['text-no-entries']}</li>`;
+            const emptyMsg = searchKeyword ? '検索結果はありません。' : labels['text-no-entries'];
+            indexList.innerHTML = `<li style="color:var(--text-muted);font-size:0.9rem;font-weight:600;padding:10px 0;text-align:center;">${emptyMsg}</li>`;
             document.getElementById('indexPageNavTop').innerHTML = '';
             return;
         }
@@ -1840,8 +2110,14 @@
     // 現在のページに含まれる複数エントリーを、新しいものから順にまとめて表示する
     function renderEntryFeed() {
         const nb = getCurrentNotebook();
-        const entries = getCurrentEntries();
-        if (entries.length === 0) { showNewForm(); return; }
+        const allEntries = getCurrentEntries();
+        if (allEntries.length === 0) { showNewForm(); return; }
+        const entries = getSearchFilteredEntries(allEntries);
+        if (entries.length === 0) {
+            document.getElementById('mainPanel').innerHTML = `<div style="text-align:center; padding:50px; font-weight:600; color:var(--text-muted);">検索結果はありません。</div>`;
+            document.getElementById('mainPanelEntryNav').innerHTML = '';
+            return;
+        }
 
         const totalPages = Math.max(1, Math.ceil(entries.length / indexPageSize));
         if (indexPageOffset > totalPages - 1) indexPageOffset = totalPages - 1;
@@ -1862,9 +2138,9 @@
             }
             html += `
                 <div class="feed-entry-block">
-                    ${entry.title ? `<div class="diary-view-title">${entry.title}</div>` : ''}
+                    ${entry.title ? `<div class="diary-view-title ${nb && nb.isVertical ? 'vertical' : ''}">${entry.title}</div>` : ''}
                     <div class="diary-view-header ${nb && nb.isVertical ? 'vertical' : ''}">
-                        <div>🗓️ ${formatJapaneseDate(entry.date)}</div>
+                        <div>${ICON_CALENDAR} ${formatJapaneseDate(entry.date)}</div>
                         ${entry.weather ? `<div>${entry.weather}</div>` : ''}
                     </div>
                     ${galleryHtml}
@@ -2009,9 +2285,9 @@
         const fontSizeClass = `fontsize-${(nb && nb.fontSize) || 'medium'}`;
         document.getElementById('mainPanel').innerHTML = `
             <div class="entry-view-wrapper ${fontSizeClass}">
-                ${entry.title ? `<div class="diary-view-title">${entry.title}</div>` : ''}
+                ${entry.title ? `<div class="diary-view-title ${nb && nb.isVertical ? 'vertical' : ''}">${entry.title}</div>` : ''}
                 <div class="diary-view-header ${nb && nb.isVertical ? 'vertical' : ''}">
-                    <div>🗓️ ${formatJapaneseDate(entry.date)}</div>
+                    <div>${ICON_CALENDAR} ${formatJapaneseDate(entry.date)}</div>
                     ${entry.weather ? `<div>${entry.weather}</div>` : ''}
                 </div>
                 ${galleryHtml}
